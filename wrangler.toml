@@ -1,0 +1,97 @@
+# =============================================================================
+# cf_ai_dev_copilot - Cloudflare Workers Configuration
+# AI-powered development assistant using Workers AI (Llama 3.3)
+# =============================================================================
+
+name = "cf-ai-dev-copilot"
+main = "src/server.ts"
+
+# Compatibility settings for Node.js APIs and latest features
+compatibility_date = "2025-12-17"
+compatibility_flags = ["nodejs_compat"]
+
+# =============================================================================
+# Workers AI Binding
+# Provides access to Llama 3.3 70B model for LLM inference
+# Usage in code: env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {...})
+# =============================================================================
+[ai]
+binding = "AI"
+
+# =============================================================================
+# Durable Objects Configuration
+# DevCopilotAgent: Stores conversation history and project context per session
+# Uses SQLite for persistent storage within the Durable Object
+# =============================================================================
+[[durable_objects.bindings]]
+name = "COPILOT_AGENT"
+class_name = "DevCopilotAgent"
+
+# Migration to enable SQLite storage in Durable Objects
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DevCopilotAgent"]
+
+# =============================================================================
+# KV Namespace Binding (Caching Layer)
+# Used for caching documentation, frequently accessed data, and rate limiting
+# Create with: wrangler kv namespace create "CACHE"
+# =============================================================================
+[[kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_KV_NAMESPACE_ID"  # Replace after running: wrangler kv namespace create "CACHE"
+# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"  # For local dev, optional
+
+# =============================================================================
+# Static Assets Configuration
+# Serves the frontend UI (built React/Vite app)
+# =============================================================================
+[assets]
+directory = "public"
+
+# =============================================================================
+# Environment Variables
+# Sensitive values should be set via wrangler secret or .dev.vars
+# =============================================================================
+[vars]
+# Model configuration - Llama 3.3 70B Instruct (FP8 quantized for speed)
+AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+
+# Application settings
+APP_NAME = "cf_ai_dev_copilot"
+MAX_CONVERSATION_HISTORY = "50"
+MAX_TOKENS = "4096"
+
+# =============================================================================
+# Development Environment Overrides
+# =============================================================================
+[env.dev]
+name = "cf-ai-dev-copilot-dev"
+
+[env.dev.vars]
+APP_NAME = "cf_ai_dev_copilot-dev"
+
+# =============================================================================
+# Production Environment
+# =============================================================================
+[env.production]
+name = "cf-ai-dev-copilot"
+# workers_dev = false  # Uncomment when using custom domain
+
+# Route configuration (uncomment and configure for custom domain)
+# routes = [
+#   { pattern = "your-domain.com/api/*", zone_name = "your-domain.com" }
+# ]
+
+# =============================================================================
+# Observability (Optional - Uncomment to enable)
+# =============================================================================
+# [observability]
+# enabled = true
+# head_sampling_rate = 1  # Sample 100% of requests for debugging
+
+# =============================================================================
+# Limits Configuration
+# =============================================================================
+[limits]
+cpu_ms = 30000  # 30 second CPU time limit for AI operations
