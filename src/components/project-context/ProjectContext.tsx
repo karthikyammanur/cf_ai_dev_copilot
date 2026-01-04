@@ -1,12 +1,12 @@
 /**
  * ProjectContext - Sidebar showing current project state
- * 
+ *
  * Displays:
  * - Current Worker code (collapsible)
  * - Previous issues resolved
  * - Active Cloudflare services
  * - Session info
- * 
+ *
  * @module components/project-context
  */
 
@@ -73,13 +73,13 @@ export interface ProjectContextProps {
 
 const SERVICE_COLORS: Record<string, string> = {
   "Workers AI": "#F6821F",
-  "KV": "#4B8BF4",
-  "D1": "#10B981",
-  "R2": "#8B5CF6",
+  KV: "#4B8BF4",
+  D1: "#10B981",
+  R2: "#8B5CF6",
   "Durable Objects": "#EC4899",
-  "Queues": "#F59E0B",
-  "Pages": "#6366F1",
-  "Analytics": "#06B6D4",
+  Queues: "#F59E0B",
+  Pages: "#6366F1",
+  Analytics: "#06B6D4"
 };
 
 // =============================================================================
@@ -102,7 +102,7 @@ function CollapsibleSection({
   children
 }: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  
+
   return (
     <div className="border-b border-neutral-700 last:border-b-0">
       <button
@@ -114,18 +114,16 @@ function CollapsibleSection({
           {isOpen ? <CaretDownIcon size={14} /> : <CaretRightIcon size={14} />}
         </span>
         <span className="text-neutral-400">{icon}</span>
-        <span className="text-sm font-medium text-neutral-200 flex-1">{title}</span>
+        <span className="text-sm font-medium text-neutral-200 flex-1">
+          {title}
+        </span>
         {badge !== undefined && (
           <span className="text-xs bg-neutral-700 text-neutral-300 px-2 py-0.5 rounded-full">
             {badge}
           </span>
         )}
       </button>
-      {isOpen && (
-        <div className="px-4 pb-3">
-          {children}
-        </div>
-      )}
+      {isOpen && <div className="px-4 pb-3">{children}</div>}
     </div>
   );
 }
@@ -144,20 +142,20 @@ export function ProjectContext({
   const [data, setData] = useState<ProjectContextData>(initialData || {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Fetch context from API
   const fetchContext = useCallback(async () => {
     if (!contextEndpoint) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(contextEndpoint);
       if (!response.ok) {
         throw new Error(`Failed to fetch context: ${response.status}`);
       }
-      const contextData = await response.json() as ProjectContextData;
+      const contextData = (await response.json()) as ProjectContextData;
       setData(contextData);
       onContextUpdate?.(contextData);
     } catch (err) {
@@ -167,14 +165,14 @@ export function ProjectContext({
       setLoading(false);
     }
   }, [contextEndpoint, onContextUpdate]);
-  
+
   // Fetch on mount
   useEffect(() => {
     if (isOpen && !initialData) {
       fetchContext();
     }
   }, [isOpen, initialData, fetchContext]);
-  
+
   // Render nothing if closed (mobile-friendly)
   if (!isOpen) {
     return (
@@ -188,7 +186,7 @@ export function ProjectContext({
       </button>
     );
   }
-  
+
   return (
     <aside className="w-80 h-full bg-neutral-900 border-l border-neutral-700 flex flex-col overflow-hidden">
       {/* Header */}
@@ -207,9 +205,9 @@ export function ProjectContext({
             className="p-1.5 hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
             aria-label="Refresh context"
           >
-            <ArrowClockwiseIcon 
-              size={16} 
-              className={`text-neutral-400 ${loading ? "animate-spin" : ""}`} 
+            <ArrowClockwiseIcon
+              size={16}
+              className={`text-neutral-400 ${loading ? "animate-spin" : ""}`}
             />
           </button>
           <button
@@ -222,7 +220,7 @@ export function ProjectContext({
           </button>
         </div>
       </div>
-      
+
       {/* Error State */}
       {error && (
         <div className="mx-4 mt-3 p-3 bg-red-900/30 border border-red-700 rounded-lg flex items-start gap-2">
@@ -239,7 +237,7 @@ export function ProjectContext({
           </div>
         </div>
       )}
-      
+
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Worker Code Section */}
@@ -261,7 +259,7 @@ export function ProjectContext({
             </p>
           )}
         </CollapsibleSection>
-        
+
         {/* Error Logs Section */}
         {data.errorLogs && data.errorLogs.length > 0 && (
           <CollapsibleSection
@@ -282,7 +280,7 @@ export function ProjectContext({
             </div>
           </CollapsibleSection>
         )}
-        
+
         {/* Resolved Issues Section */}
         <CollapsibleSection
           title="Resolved Issues"
@@ -298,7 +296,10 @@ export function ProjectContext({
                   className="p-3 bg-neutral-800/50 rounded-lg border border-neutral-700"
                 >
                   <div className="flex items-start gap-2">
-                    <CheckCircleIcon size={16} className="text-green-400 mt-0.5 shrink-0" />
+                    <CheckCircleIcon
+                      size={16}
+                      className="text-green-400 mt-0.5 shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-neutral-200 font-medium truncate">
                         {issue.issue}
@@ -320,7 +321,7 @@ export function ProjectContext({
             </p>
           )}
         </CollapsibleSection>
-        
+
         {/* Cloudflare Services Section */}
         <CollapsibleSection
           title="Active Services"
@@ -334,14 +335,16 @@ export function ProjectContext({
                 <span
                   key={service}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-800 border border-neutral-700"
-                  style={{ 
+                  style={{
                     color: SERVICE_COLORS[service] || "#F6821F",
                     borderColor: `${SERVICE_COLORS[service] || "#F6821F"}40`
                   }}
                 >
-                  <span 
+                  <span
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: SERVICE_COLORS[service] || "#F6821F" }}
+                    style={{
+                      backgroundColor: SERVICE_COLORS[service] || "#F6821F"
+                    }}
                   />
                   {service}
                 </span>
@@ -367,7 +370,7 @@ export function ProjectContext({
             </div>
           )}
         </CollapsibleSection>
-        
+
         {/* Session Info Section */}
         {data.sessionInfo && (
           <CollapsibleSection
@@ -377,7 +380,9 @@ export function ProjectContext({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-neutral-500">Messages</span>
-                <span className="text-neutral-200">{data.sessionInfo.messageCount}</span>
+                <span className="text-neutral-200">
+                  {data.sessionInfo.messageCount}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Started</span>
@@ -388,12 +393,20 @@ export function ProjectContext({
               <div className="flex justify-between">
                 <span className="text-neutral-500">Last Activity</span>
                 <span className="text-neutral-200">
-                  {new Date(data.sessionInfo.lastActivityAt).toLocaleTimeString()}
+                  {new Date(
+                    data.sessionInfo.lastActivityAt
+                  ).toLocaleTimeString()}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Status</span>
-                <span className={data.sessionInfo.isActive ? "text-green-400" : "text-neutral-400"}>
+                <span
+                  className={
+                    data.sessionInfo.isActive
+                      ? "text-green-400"
+                      : "text-neutral-400"
+                  }
+                >
                   {data.sessionInfo.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
@@ -401,12 +414,14 @@ export function ProjectContext({
           </CollapsibleSection>
         )}
       </div>
-      
+
       {/* Footer */}
       <div className="px-4 py-3 border-t border-neutral-700 bg-neutral-850">
         <p className="text-xs text-neutral-500 text-center">
           Powered by{" "}
-          <span className="text-[#F6821F] font-medium">Cloudflare Workers AI</span>
+          <span className="text-[#F6821F] font-medium">
+            Cloudflare Workers AI
+          </span>
         </p>
       </div>
     </aside>

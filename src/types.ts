@@ -10,7 +10,7 @@ export interface ConversationMessage {
   /** Unique identifier for the message */
   id: string;
   /** Role of the message sender */
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   /** Message content */
   content: string;
   /** ISO timestamp when the message was created */
@@ -72,19 +72,19 @@ export interface ProjectContext {
 /**
  * Supported Cloudflare services for context awareness
  */
-export type CloudflareService = 
-  | 'Workers'
-  | 'KV'
-  | 'D1'
-  | 'R2'
-  | 'Durable Objects'
-  | 'Queues'
-  | 'Vectorize'
-  | 'Workers AI'
-  | 'Pages'
-  | 'Hyperdrive'
-  | 'Browser Rendering'
-  | 'Email Workers';
+export type CloudflareService =
+  | "Workers"
+  | "KV"
+  | "D1"
+  | "R2"
+  | "Durable Objects"
+  | "Queues"
+  | "Vectorize"
+  | "Workers AI"
+  | "Pages"
+  | "Hyperdrive"
+  | "Browser Rendering"
+  | "Email Workers";
 
 /**
  * Session information for state management
@@ -121,7 +121,7 @@ export interface GetHistoryOptions {
   /** Maximum number of messages to return */
   limit?: number;
   /** Filter by role */
-  role?: 'user' | 'assistant' | 'system';
+  role?: "user" | "assistant" | "system";
   /** Return messages after this timestamp */
   after?: string;
   /** Return messages before this timestamp */

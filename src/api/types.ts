@@ -1,9 +1,9 @@
 /**
  * DevCopilot API Types
- * 
+ *
  * Type definitions for the Next.js API route that communicates
  * with the Cloudflare Worker backend.
- * 
+ *
  * @module api/types
  */
 
@@ -38,7 +38,7 @@ export interface ChatRequest {
   /** Project context for better assistance */
   projectContext?: ProjectContext;
   /** Optional: specific tool to invoke */
-  tool?: 'analyzeError' | 'reviewCode' | 'searchDocs';
+  tool?: "analyzeError" | "reviewCode" | "searchDocs";
 }
 
 /**
@@ -46,7 +46,7 @@ export interface ChatRequest {
  */
 export interface ToolRequest {
   /** Tool to invoke */
-  tool: 'analyzeError' | 'reviewCode' | 'searchDocs';
+  tool: "analyzeError" | "reviewCode" | "searchDocs";
   /** Tool-specific input */
   input: {
     /** For analyzeError: the error log text */
@@ -105,7 +105,7 @@ export interface ChatResponse {
  */
 export interface StreamChunk {
   /** Chunk type */
-  type: 'text' | 'tool-start' | 'tool-result' | 'error' | 'done';
+  type: "text" | "tool-start" | "tool-result" | "error" | "done";
   /** Content based on type */
   content?: string;
   /** Tool name (for tool events) */
@@ -185,40 +185,40 @@ export interface ValidationResult {
  */
 export function validateChatRequest(body: unknown): ValidationResult {
   const errors: string[] = [];
-  
-  if (!body || typeof body !== 'object') {
-    return { valid: false, errors: ['Request body must be an object'] };
+
+  if (!body || typeof body !== "object") {
+    return { valid: false, errors: ["Request body must be an object"] };
   }
-  
+
   const request = body as Record<string, unknown>;
-  
+
   // Message validation
   if (!request.message) {
-    errors.push('Message is required');
-  } else if (typeof request.message !== 'string') {
-    errors.push('Message must be a string');
+    errors.push("Message is required");
+  } else if (typeof request.message !== "string") {
+    errors.push("Message must be a string");
   } else if (request.message.length === 0) {
-    errors.push('Message cannot be empty');
+    errors.push("Message cannot be empty");
   } else if (request.message.length > 50000) {
-    errors.push('Message exceeds maximum length (50,000 characters)');
+    errors.push("Message exceeds maximum length (50,000 characters)");
   }
-  
+
   // SessionId validation (optional)
   if (request.sessionId !== undefined) {
-    if (typeof request.sessionId !== 'string') {
-      errors.push('SessionId must be a string');
+    if (typeof request.sessionId !== "string") {
+      errors.push("SessionId must be a string");
     } else if (request.sessionId.length > 100) {
-      errors.push('SessionId exceeds maximum length (100 characters)');
+      errors.push("SessionId exceeds maximum length (100 characters)");
     }
   }
-  
+
   // ProjectContext validation (optional)
   if (request.projectContext !== undefined) {
-    if (typeof request.projectContext !== 'object') {
-      errors.push('ProjectContext must be an object');
+    if (typeof request.projectContext !== "object") {
+      errors.push("ProjectContext must be an object");
     }
   }
-  
+
   return {
     valid: errors.length === 0,
     errors
@@ -230,28 +230,28 @@ export function validateChatRequest(body: unknown): ValidationResult {
  */
 export function validateToolRequest(body: unknown): ValidationResult {
   const errors: string[] = [];
-  
-  if (!body || typeof body !== 'object') {
-    return { valid: false, errors: ['Request body must be an object'] };
+
+  if (!body || typeof body !== "object") {
+    return { valid: false, errors: ["Request body must be an object"] };
   }
-  
+
   const request = body as Record<string, unknown>;
-  
+
   // Tool validation
-  const validTools = ['analyzeError', 'reviewCode', 'searchDocs'];
+  const validTools = ["analyzeError", "reviewCode", "searchDocs"];
   if (!request.tool) {
-    errors.push('Tool is required');
+    errors.push("Tool is required");
   } else if (!validTools.includes(request.tool as string)) {
-    errors.push(`Invalid tool. Must be one of: ${validTools.join(', ')}`);
+    errors.push(`Invalid tool. Must be one of: ${validTools.join(", ")}`);
   }
-  
+
   // Input validation
   if (!request.input) {
-    errors.push('Input is required');
-  } else if (typeof request.input !== 'object') {
-    errors.push('Input must be an object');
+    errors.push("Input is required");
+  } else if (typeof request.input !== "object") {
+    errors.push("Input must be an object");
   }
-  
+
   return {
     valid: errors.length === 0,
     errors
@@ -264,12 +264,14 @@ export function validateToolRequest(body: unknown): ValidationResult {
 export function sanitizeInput(input: string): string {
   // Remove potential XSS vectors while preserving code
   // We're lenient because code often contains special characters
-  return input
-    .trim()
-    // Remove null bytes
-    .replace(/\0/g, '')
-    // Limit consecutive newlines
-    .replace(/\n{5,}/g, '\n\n\n\n');
+  return (
+    input
+      .trim()
+      // Remove null bytes
+      .replace(/\0/g, "")
+      // Limit consecutive newlines
+      .replace(/\n{5,}/g, "\n\n\n\n")
+  );
 }
 
 /**

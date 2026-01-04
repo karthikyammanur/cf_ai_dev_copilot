@@ -1,9 +1,9 @@
 /**
  * cf_ai_dev_copilot - Main Worker Entry Point
- * 
+ *
  * This is the main Worker file that integrates all tools with Llama 3.3
  * and handles the agent orchestration for the DevCopilot assistant.
- * 
+ *
  * @module server
  */
 
@@ -83,11 +83,12 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
  */
 function createModel(env: Env) {
   const workersAI = createWorkersAI({ binding: env.AI });
-  
+
   // Use the model specified in environment or default to Llama 3.3 70B
   const modelId = env.AI_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
-  
-  return workersAI(modelId);
+
+  // Cast to any to avoid strict model type checking
+  return workersAI(modelId as Parameters<typeof workersAI>[0]);
 }
 
 // =============================================================================
@@ -96,14 +97,14 @@ function createModel(env: Env) {
 
 /**
  * DevCopilot Chat Agent
- * 
+ *
  * Handles real-time AI chat interactions with tool execution and streaming.
  * Extends AIChatAgent for WebSocket support and message persistence.
  */
 export class Chat extends AIChatAgent<Env> {
   /**
    * Handles incoming chat messages and manages the response stream
-   * 
+   *
    * Flow:
    * 1. Clean up any incomplete tool calls from previous messages
    * 2. Process pending tool confirmations (human-in-the-loop)
@@ -117,7 +118,7 @@ export class Chat extends AIChatAgent<Env> {
   ) {
     // Create model instance with current environment bindings
     const model = createModel(this.env);
-    
+
     // Collect all tools, including any MCP tools
     const allTools = {
       ...tools,
@@ -151,7 +152,7 @@ export class Chat extends AIChatAgent<Env> {
             messages: await convertToModelMessages(processedMessages),
             model,
             tools: allTools,
-            maxTokens,
+            maxOutputTokens: maxTokens,
             temperature: 0.7,
             // Limit tool call depth to prevent infinite loops
             stopWhen: stepCountIs(10),
@@ -159,9 +160,13 @@ export class Chat extends AIChatAgent<Env> {
             onFinish: async (event) => {
               // Persist the conversation to Durable Object
               await this.persistConversation(copilotStub, event);
-              
+
               // Call the original onFinish callback
-              (onFinish as unknown as StreamTextOnFinishCallback<typeof allTools>)(event);
+              (
+                onFinish as unknown as StreamTextOnFinishCallback<
+                  typeof allTools
+                >
+              )(event);
             },
             // Handle streaming chunks for real-time updates
             onStepFinish: async (step) => {
@@ -179,13 +184,16 @@ export class Chat extends AIChatAgent<Env> {
           writer.merge(result.toUIMessageStream());
         } catch (error) {
           console.error("[DevCopilot] Stream error:", error);
-          
+
           // Send error message to client
           writer.write({
             type: "error",
-            value: error instanceof Error ? error.message : "An unexpected error occurred"
+            errorText:
+              error instanceof Error
+                ? error.message
+                : "An unexpected error occurred"
           });
-          
+
           throw error;
         }
       }
@@ -206,37 +214,44 @@ export class Chat extends AIChatAgent<Env> {
     try {
       // Get the last assistant message
       const lastMessage = this.messages[this.messages.length - 1];
-      
+
       if (lastMessage && lastMessage.role === "assistant") {
-        await copilotStub.fetch(new Request("http://do/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            role: "assistant",
-            content: this.extractTextContent(lastMessage),
-            metadata: {
-              toolCalls: event.toolCalls?.map((tc: { toolName: string }) => tc.toolName) || [],
-              finishReason: event.finishReason,
-              usage: event.usage
-            }
+        await copilotStub.fetch(
+          new Request("http://do/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              role: "assistant",
+              content: this.extractTextContent(lastMessage),
+              metadata: {
+                toolCalls:
+                  event.toolCalls?.map(
+                    (tc: { toolName: string }) => tc.toolName
+                  ) || [],
+                finishReason: event.finishReason,
+                usage: event.usage
+              }
+            })
           })
-        }));
+        );
       }
-      
+
       // Also persist the user message if it's new
       const userMessage = this.messages.find(
         (m, i) => m.role === "user" && i === this.messages.length - 2
       );
-      
+
       if (userMessage) {
-        await copilotStub.fetch(new Request("http://do/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            role: "user",
-            content: this.extractTextContent(userMessage)
+        await copilotStub.fetch(
+          new Request("http://do/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              role: "user",
+              content: this.extractTextContent(userMessage)
+            })
           })
-        }));
+        );
       }
     } catch (error) {
       console.error("[DevCopilot] Failed to persist conversation:", error);
@@ -249,7 +264,7 @@ export class Chat extends AIChatAgent<Env> {
    */
   private extractTextContent(message: UIMessage): string {
     if (!message.parts) return "";
-    
+
     return message.parts
       .filter((part) => part.type === "text")
       .map((part) => (part as { type: "text"; text: string }).text)
@@ -290,39 +305,44 @@ export class Chat extends AIChatAgent<Env> {
  */
 async function handleToolAPI(
   request: Request,
-  env: Env
+  _env: Env
 ): Promise<Response | null> {
   const url = new URL(request.url);
-  
+
   // Only handle POST requests to /api/tools/*
   if (!url.pathname.startsWith("/api/tools/") || request.method !== "POST") {
     return null;
   }
 
   const toolName = url.pathname.replace("/api/tools/", "");
-  
+
   try {
-    const body = await request.json();
-    
+    const body = (await request.json()) as Record<string, unknown>;
+
     switch (toolName) {
       case "analyze-error": {
-        const { analyzeCloudflareErrorFn } = await import("./tools/analyzeCloudflareError");
-        const result = analyzeCloudflareErrorFn(body.errorLog);
+        const { analyzeCloudflareErrorFn } =
+          await import("./tools/analyzeCloudflareError");
+        const result = analyzeCloudflareErrorFn(body.errorLog as string);
         return Response.json(result);
       }
-      
+
       case "review-code": {
         const { reviewWorkerCodeFn } = await import("./tools/reviewWorkerCode");
-        const result = reviewWorkerCodeFn(body.code);
+        const result = reviewWorkerCodeFn(body.code as string);
         return Response.json(result);
       }
-      
+
       case "search-docs": {
-        const { searchDocumentationFn } = await import("./tools/searchCloudflareDocs");
-        const result = searchDocumentationFn(body.query, body.maxResults);
+        const { searchDocumentationFn } =
+          await import("./tools/searchCloudflareDocs");
+        const result = searchDocumentationFn(
+          body.query as string,
+          body.maxResults as number | undefined
+        );
         return Response.json(result);
       }
-      
+
       default:
         return Response.json(
           { error: `Unknown tool: ${toolName}` },
@@ -332,7 +352,7 @@ async function handleToolAPI(
   } catch (error) {
     console.error(`[DevCopilot] Tool API error (${toolName}):`, error);
     return Response.json(
-      { 
+      {
         error: "Tool execution failed",
         message: error instanceof Error ? error.message : "Unknown error"
       },
@@ -350,7 +370,7 @@ async function handleStateAPI(
   env: Env
 ): Promise<Response | null> {
   const url = new URL(request.url);
-  
+
   // Only handle /api/state/* routes
   if (!url.pathname.startsWith("/api/state/")) {
     return null;
@@ -361,32 +381,40 @@ async function handleStateAPI(
   const copilotStub = env.COPILOT_AGENT.get(copilotId);
 
   const route = url.pathname.replace("/api/state/", "");
-  
+
   switch (route) {
     case "messages":
-      return copilotStub.fetch(new Request("http://do/messages", {
-        method: request.method,
-        headers: request.headers,
-        body: request.method !== "GET" ? request.body : undefined
-      }));
-    
+      return copilotStub.fetch(
+        new Request("http://do/messages", {
+          method: request.method,
+          headers: request.headers,
+          body: request.method !== "GET" ? request.body : undefined
+        })
+      );
+
     case "context":
-      return copilotStub.fetch(new Request("http://do/context", {
-        method: request.method,
-        headers: request.headers,
-        body: request.method !== "GET" ? request.body : undefined
-      }));
-    
+      return copilotStub.fetch(
+        new Request("http://do/context", {
+          method: request.method,
+          headers: request.headers,
+          body: request.method !== "GET" ? request.body : undefined
+        })
+      );
+
     case "session":
-      return copilotStub.fetch(new Request("http://do/session", {
-        method: request.method
-      }));
-    
+      return copilotStub.fetch(
+        new Request("http://do/session", {
+          method: request.method
+        })
+      );
+
     case "full":
-      return copilotStub.fetch(new Request("http://do/state", {
-        method: "GET"
-      }));
-    
+      return copilotStub.fetch(
+        new Request("http://do/state", {
+          method: "GET"
+        })
+      );
+
     default:
       return Response.json(
         { error: `Unknown state route: ${route}` },
@@ -411,7 +439,11 @@ function handleHealthCheck(env: Env): Response {
       workersAI: true,
       durableObjects: true,
       kvCache: !!env.CACHE,
-      tools: ["analyzeCloudflareError", "reviewWorkerCode", "searchCloudflareDocs"]
+      tools: [
+        "analyzeCloudflareError",
+        "reviewWorkerCode",
+        "searchCloudflareDocs"
+      ]
     },
     timestamp: new Date().toISOString()
   });
@@ -426,7 +458,7 @@ function handleHealthCheck(env: Env): Response {
  * Routes incoming requests to the appropriate handler
  */
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+  async fetch(request: Request, env: Env, _ctx: ExecutionContext) {
     const url = new URL(request.url);
 
     // Health check endpoint
@@ -456,12 +488,12 @@ export default {
 
     // 404 fallback
     return Response.json(
-      { 
+      {
         error: "Not found",
         availableEndpoints: [
           "/health",
           "/api/tools/analyze-error",
-          "/api/tools/review-code", 
+          "/api/tools/review-code",
           "/api/tools/search-docs",
           "/api/state/messages",
           "/api/state/context",

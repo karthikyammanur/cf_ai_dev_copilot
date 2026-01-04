@@ -1,12 +1,12 @@
 /**
  * DevCopilot - AI-Powered Cloudflare Workers Development Assistant
- * 
+ *
  * Main chat interface with:
  * - Syntax-highlighted code blocks
  * - Error log analysis
  * - Project context sidebar
  * - Cloudflare-branded dark mode UI
- * 
+ *
  * @module app
  */
 
@@ -25,7 +25,10 @@ import { Toggle } from "@/components/toggle/Toggle";
 import { Textarea } from "@/components/textarea/Textarea";
 import { MemoizedMarkdown } from "@/components/memoized-markdown";
 import { ToolInvocationCard } from "@/components/tool-invocation-card/ToolInvocationCard";
-import { ProjectContext, type ProjectContextData } from "@/components/project-context";
+import {
+  ProjectContext,
+  type ProjectContextData
+} from "@/components/project-context";
 import { ErrorLogInput } from "@/components/error-log-input";
 
 // Icon imports
@@ -66,7 +69,8 @@ const QUICK_ACTIONS = [
   {
     icon: <CodeIcon size={16} />,
     label: "Review Code",
-    prompt: "Please review this Cloudflare Worker code for performance, security, and best practices:",
+    prompt:
+      "Please review this Cloudflare Worker code for performance, security, and best practices:",
     color: "#8B5CF6"
   },
   {
@@ -121,17 +125,18 @@ function WelcomeCard({ onQuickAction }: WelcomeCardProps) {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#F6821F]/20 to-[#F6821F]/5 border border-[#F6821F]/20">
             <DevCopilotLogo size={36} />
           </div>
-          
+
           {/* Title */}
           <div>
             <h1 className="text-2xl font-bold text-neutral-100 mb-2">
               Welcome to DevCopilot
             </h1>
             <p className="text-neutral-400 text-sm">
-              Your AI assistant for Cloudflare Workers development. I can help you debug errors, review code, and find documentation.
+              Your AI assistant for Cloudflare Workers development. I can help
+              you debug errors, review code, and find documentation.
             </p>
           </div>
-          
+
           {/* Quick Actions */}
           <div className="pt-4">
             <p className="text-xs text-neutral-500 uppercase tracking-wider mb-3">
@@ -145,13 +150,11 @@ function WelcomeCard({ onQuickAction }: WelcomeCardProps) {
                   onClick={() => onQuickAction(action.prompt)}
                   className="flex items-center gap-2 px-4 py-3 rounded-lg bg-neutral-800 border border-neutral-700 hover:border-neutral-600 hover:bg-neutral-750 transition-all text-left group"
                 >
-                  <span 
+                  <span
                     className="p-1.5 rounded-md"
                     style={{ backgroundColor: `${action.color}20` }}
                   >
-                    <span style={{ color: action.color }}>
-                      {action.icon}
-                    </span>
+                    <span style={{ color: action.color }}>{action.icon}</span>
                   </span>
                   <span className="text-sm text-neutral-300 group-hover:text-neutral-100 transition-colors">
                     {action.label}
@@ -160,7 +163,7 @@ function WelcomeCard({ onQuickAction }: WelcomeCardProps) {
               ))}
             </div>
           </div>
-          
+
           {/* Features */}
           <div className="pt-4 border-t border-neutral-800">
             <div className="flex items-center justify-center gap-6 text-xs text-neutral-500">
@@ -233,7 +236,7 @@ function ChatMessage({
           ) : (
             !isUser && <div className="w-8" />
           )}
-          
+
           {showAvatar && isUser && (
             <Avatar username="You" className="shrink-0" />
           )}
@@ -262,7 +265,10 @@ function ChatMessage({
                       <div className={isUser ? "text-white" : ""}>
                         <MemoizedMarkdown
                           id={`${message.id}-${i}`}
-                          content={part.text.replace(/^scheduled message: /, "")}
+                          content={part.text.replace(
+                            /^scheduled message: /,
+                            ""
+                          )}
                         />
                       </div>
                     </Card>
@@ -273,7 +279,10 @@ function ChatMessage({
                     >
                       {formatTime(
                         (message.metadata as { createdAt?: string })?.createdAt
-                          ? new Date((message.metadata as { createdAt: string }).createdAt)
+                          ? new Date(
+                              (message.metadata as { createdAt: string })
+                                .createdAt
+                            )
                           : new Date()
                       )}
                     </p>
@@ -284,7 +293,8 @@ function ChatMessage({
               if (isStaticToolUIPart(part) && message.role === "assistant") {
                 const toolCallId = part.toolCallId;
                 const toolName = part.type.replace("tool-", "");
-                const needsConfirmation = toolsRequiringConfirmation.includes(toolName);
+                const needsConfirmation =
+                  toolsRequiringConfirmation.includes(toolName);
 
                 return (
                   <ToolInvocationCard
@@ -296,7 +306,11 @@ function ChatMessage({
                       onAddToolResult(toolCallId, result);
                     }}
                     addToolResult={(toolCallId, result) => {
-                      addToolResult(part.type.replace("tool-", ""), toolCallId, result);
+                      addToolResult(
+                        part.type.replace("tool-", ""),
+                        toolCallId,
+                        result
+                      );
                     }}
                   />
                 );
@@ -320,13 +334,13 @@ export default function DevCopilotApp() {
     const savedTheme = localStorage.getItem("theme");
     return (savedTheme as "dark" | "light") || "dark";
   });
-  
+
   // UI state
   const [showDebug, setShowDebug] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [textareaHeight, setTextareaHeight] = useState("auto");
   const [projectContext, setProjectContext] = useState<ProjectContextData>({});
-  
+
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -362,7 +376,7 @@ export default function DevCopilotApp() {
   });
 
   const [agentInput, setAgentInput] = useState("");
-  
+
   const handleAgentInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -412,7 +426,7 @@ export default function DevCopilotApp() {
   const handleAnalyzeError = async (errorLog: string) => {
     const message = `Please analyze this error log from my Cloudflare Worker:\n\n\`\`\`\n${errorLog}\n\`\`\``;
     setAgentInput("");
-    
+
     await sendMessage(
       {
         role: "user",
@@ -448,7 +462,7 @@ export default function DevCopilotApp() {
         {/* Header */}
         <header className="px-4 py-3 border-b border-neutral-800 flex items-center gap-3 bg-neutral-900">
           <DevCopilotLogo size={28} />
-          
+
           <div className="flex-1">
             <h1 className="font-semibold text-base text-neutral-100">
               DevCopilot
@@ -485,7 +499,11 @@ export default function DevCopilotApp() {
               onClick={toggleTheme}
               aria-label="Toggle theme"
             >
-              {theme === "dark" ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+              {theme === "dark" ? (
+                <SunIcon size={18} />
+              ) : (
+                <MoonIcon size={18} />
+              )}
             </Button>
 
             <Button
@@ -530,10 +548,13 @@ export default function DevCopilotApp() {
                     isUser={isUser}
                     showAvatar={showAvatar}
                     showDebug={showDebug}
-                    toolsRequiringConfirmation={toolsRequiringConfirmation as string[]}
+                    toolsRequiringConfirmation={
+                      toolsRequiringConfirmation as string[]
+                    }
                     onAddToolResult={(toolCallId, result) => {
                       const part = m.parts?.find(
-                        (p) => isStaticToolUIPart(p) && p.toolCallId === toolCallId
+                        (p) =>
+                          isStaticToolUIPart(p) && p.toolCallId === toolCallId
                       );
                       if (part && isStaticToolUIPart(part)) {
                         addToolResult({
@@ -555,9 +576,9 @@ export default function DevCopilotApp() {
         </div>
 
         {/* Input Area */}
-        <div 
-          className="absolute bottom-0 left-0 bg-gradient-to-t from-neutral-950 via-neutral-950 to-transparent pt-8 pb-4 px-4" 
-          style={{ right: showSidebar ? '320px' : '0' }}
+        <div
+          className="absolute bottom-0 left-0 bg-gradient-to-t from-neutral-950 via-neutral-950 to-transparent pt-8 pb-4 px-4"
+          style={{ right: showSidebar ? "320px" : "0" }}
         >
           {/* Error Log Input (Collapsible) */}
           <div className="max-w-3xl mx-auto mb-3">
@@ -566,7 +587,7 @@ export default function DevCopilotApp() {
               isAnalyzing={status === "streaming"}
             />
           </div>
-          
+
           {/* Main Input */}
           <form
             onSubmit={(e) => {
@@ -589,10 +610,16 @@ export default function DevCopilotApp() {
                   handleAgentInputChange(e);
                   e.target.style.height = "auto";
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
-                  setTextareaHeight(`${Math.min(e.target.scrollHeight, 200)}px`);
+                  setTextareaHeight(
+                    `${Math.min(e.target.scrollHeight, 200)}px`
+                  );
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  if (
+                    e.key === "Enter" &&
+                    !e.shiftKey &&
+                    !e.nativeEvent.isComposing
+                  ) {
                     e.preventDefault();
                     handleAgentSubmit(e as unknown as React.FormEvent);
                   }
@@ -600,7 +627,7 @@ export default function DevCopilotApp() {
                 rows={1}
                 style={{ height: textareaHeight }}
               />
-              
+
               {/* Action Buttons */}
               <div className="absolute bottom-2 right-2 flex items-center gap-1">
                 {status === "submitted" || status === "streaming" ? (
@@ -630,13 +657,17 @@ export default function DevCopilotApp() {
                 )}
               </div>
             </div>
-            
+
             {/* Helper Text */}
             <p className="text-xs text-neutral-600 text-center mt-2">
-              <kbd className="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 text-[10px]">Enter</kbd>
-              {" "}to send • {" "}
-              <kbd className="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 text-[10px]">Shift + Enter</kbd>
-              {" "}for new line
+              <kbd className="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 text-[10px]">
+                Enter
+              </kbd>{" "}
+              to send •{" "}
+              <kbd className="px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400 text-[10px]">
+                Shift + Enter
+              </kbd>{" "}
+              for new line
             </p>
           </form>
         </div>

@@ -1,13 +1,13 @@
 /**
  * CodeBlock - Syntax highlighted code block with copy functionality
- * 
+ *
  * Features:
  * - Syntax highlighting using a simple highlight approach
  * - Copy to clipboard button
  * - Language detection/display
  * - Line numbers (optional)
  * - Dark mode support with Cloudflare colors
- * 
+ *
  * @module components/code-block
  */
 
@@ -48,55 +48,107 @@ const HIGHLIGHT_RULES: Record<string, HighlightRule[]> = {
     { pattern: /(\/\/.*$)/gm, className: "text-neutral-500" },
     { pattern: /(\/\*[\s\S]*?\*\/)/g, className: "text-neutral-500" },
     // Strings
-    { pattern: /(['"`])((?:\\.|(?!\1)[^\\])*?)\1/g, className: "text-green-400" },
+    {
+      pattern: /(['"`])((?:\\.|(?!\1)[^\\])*?)\1/g,
+      className: "text-green-400"
+    },
     // Keywords
-    { pattern: /\b(const|let|var|function|async|await|return|if|else|for|while|try|catch|throw|new|class|extends|import|export|from|default|type|interface)\b/g, className: "text-purple-400" },
+    {
+      pattern:
+        /\b(const|let|var|function|async|await|return|if|else|for|while|try|catch|throw|new|class|extends|import|export|from|default|type|interface)\b/g,
+      className: "text-purple-400"
+    },
     // Built-ins
-    { pattern: /\b(console|Promise|Response|Request|Headers|fetch|JSON|Object|Array|String|Number|Boolean|null|undefined|true|false)\b/g, className: "text-blue-400" },
+    {
+      pattern:
+        /\b(console|Promise|Response|Request|Headers|fetch|JSON|Object|Array|String|Number|Boolean|null|undefined|true|false)\b/g,
+      className: "text-blue-400"
+    },
     // Functions
-    { pattern: /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g, className: "text-yellow-400" },
+    {
+      pattern: /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g,
+      className: "text-yellow-400"
+    },
     // Numbers
     { pattern: /\b(\d+\.?\d*)\b/g, className: "text-orange-400" },
     // Properties after dot
-    { pattern: /\.([a-zA-Z_$][a-zA-Z0-9_$]*)/g, className: "text-cyan-400" },
+    { pattern: /\.([a-zA-Z_$][a-zA-Z0-9_$]*)/g, className: "text-cyan-400" }
   ],
   typescript: [], // Will be populated from javascript
   python: [
     { pattern: /(#.*$)/gm, className: "text-neutral-500" },
-    { pattern: /('''[\s\S]*?'''|"""[\s\S]*?""")/g, className: "text-neutral-500" },
-    { pattern: /(['"])((?:\\.|(?!\1)[^\\])*?)\1/g, className: "text-green-400" },
-    { pattern: /\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|lambda|async|await|True|False|None)\b/g, className: "text-purple-400" },
-    { pattern: /\b(print|len|range|str|int|float|list|dict|set|tuple|type|isinstance)\b/g, className: "text-blue-400" },
-    { pattern: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g, className: "text-yellow-400" },
-    { pattern: /\b(\d+\.?\d*)\b/g, className: "text-orange-400" },
+    {
+      pattern: /('''[\s\S]*?'''|"""[\s\S]*?""")/g,
+      className: "text-neutral-500"
+    },
+    {
+      pattern: /(['"])((?:\\.|(?!\1)[^\\])*?)\1/g,
+      className: "text-green-400"
+    },
+    {
+      pattern:
+        /\b(def|class|if|elif|else|for|while|try|except|finally|with|as|import|from|return|yield|lambda|async|await|True|False|None)\b/g,
+      className: "text-purple-400"
+    },
+    {
+      pattern:
+        /\b(print|len|range|str|int|float|list|dict|set|tuple|type|isinstance)\b/g,
+      className: "text-blue-400"
+    },
+    {
+      pattern: /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g,
+      className: "text-yellow-400"
+    },
+    { pattern: /\b(\d+\.?\d*)\b/g, className: "text-orange-400" }
   ],
   json: [
     { pattern: /("(?:[^"\\]|\\.)*")\s*:/g, className: "text-cyan-400" },
     { pattern: /:\s*("(?:[^"\\]|\\.)*")/g, className: "text-green-400" },
     { pattern: /\b(true|false|null)\b/g, className: "text-purple-400" },
-    { pattern: /\b(-?\d+\.?\d*)\b/g, className: "text-orange-400" },
+    { pattern: /\b(-?\d+\.?\d*)\b/g, className: "text-orange-400" }
   ],
   sql: [
     { pattern: /(--.*$)/gm, className: "text-neutral-500" },
-    { pattern: /(['"])((?:\\.|(?!\1)[^\\])*?)\1/g, className: "text-green-400" },
-    { pattern: /\b(SELECT|FROM|WHERE|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|ALTER|DROP|INDEX|JOIN|LEFT|RIGHT|INNER|OUTER|ON|AND|OR|NOT|NULL|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|DEFAULT|CONSTRAINT|AS|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|DISTINCT|COUNT|SUM|AVG|MAX|MIN|LIKE|IN|BETWEEN|EXISTS|CASE|WHEN|THEN|ELSE|END)\b/gi, className: "text-purple-400" },
-    { pattern: /\b(INTEGER|TEXT|REAL|BLOB|VARCHAR|CHAR|BOOLEAN|DATE|DATETIME|TIMESTAMP)\b/gi, className: "text-blue-400" },
-    { pattern: /\b(\d+\.?\d*)\b/g, className: "text-orange-400" },
+    {
+      pattern: /(['"])((?:\\.|(?!\1)[^\\])*?)\1/g,
+      className: "text-green-400"
+    },
+    {
+      pattern:
+        /\b(SELECT|FROM|WHERE|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|ALTER|DROP|INDEX|JOIN|LEFT|RIGHT|INNER|OUTER|ON|AND|OR|NOT|NULL|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|DEFAULT|CONSTRAINT|AS|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|DISTINCT|COUNT|SUM|AVG|MAX|MIN|LIKE|IN|BETWEEN|EXISTS|CASE|WHEN|THEN|ELSE|END)\b/gi,
+      className: "text-purple-400"
+    },
+    {
+      pattern:
+        /\b(INTEGER|TEXT|REAL|BLOB|VARCHAR|CHAR|BOOLEAN|DATE|DATETIME|TIMESTAMP)\b/gi,
+      className: "text-blue-400"
+    },
+    { pattern: /\b(\d+\.?\d*)\b/g, className: "text-orange-400" }
   ],
   toml: [
     { pattern: /(#.*$)/gm, className: "text-neutral-500" },
     { pattern: /^\s*\[([^\]]+)\]/gm, className: "text-cyan-400 font-semibold" },
-    { pattern: /^(\s*[a-zA-Z_][a-zA-Z0-9_]*)\s*=/gm, className: "text-purple-400" },
+    {
+      pattern: /^(\s*[a-zA-Z_][a-zA-Z0-9_]*)\s*=/gm,
+      className: "text-purple-400"
+    },
     { pattern: /=\s*("(?:[^"\\]|\\.)*")/g, className: "text-green-400" },
     { pattern: /\b(true|false)\b/g, className: "text-orange-400" },
-    { pattern: /\b(\d+\.?\d*)\b/g, className: "text-orange-400" },
+    { pattern: /\b(\d+\.?\d*)\b/g, className: "text-orange-400" }
   ],
   bash: [
     { pattern: /(#.*$)/gm, className: "text-neutral-500" },
-    { pattern: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, className: "text-green-400" },
+    {
+      pattern: /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,
+      className: "text-green-400"
+    },
     { pattern: /\$\{?[a-zA-Z_][a-zA-Z0-9_]*\}?/g, className: "text-cyan-400" },
-    { pattern: /\b(if|then|else|elif|fi|for|while|do|done|case|esac|function|return|exit|export|source|cd|ls|rm|cp|mv|mkdir|echo|cat|grep|sed|awk|npm|npx|wrangler|node|git)\b/g, className: "text-purple-400" },
-  ],
+    {
+      pattern:
+        /\b(if|then|else|elif|fi|for|while|do|done|case|esac|function|return|exit|export|source|cd|ls|rm|cp|mv|mkdir|echo|cat|grep|sed|awk|npm|npx|wrangler|node|git)\b/g,
+      className: "text-purple-400"
+    }
+  ]
 };
 
 // TypeScript uses JavaScript rules
@@ -110,16 +162,17 @@ HIGHLIGHT_RULES.typescript = HIGHLIGHT_RULES.javascript;
  * Apply syntax highlighting to code
  */
 function highlightCode(code: string, language: string): string {
-  const rules = HIGHLIGHT_RULES[language.toLowerCase()] || HIGHLIGHT_RULES.javascript;
+  const rules =
+    HIGHLIGHT_RULES[language.toLowerCase()] || HIGHLIGHT_RULES.javascript;
   let highlighted = escapeHtml(code);
-  
+
   // Apply each rule (order matters for some patterns)
   for (const rule of rules) {
     highlighted = highlighted.replace(rule.pattern, (match) => {
       return `<span class="${rule.className}">${match}</span>`;
     });
   }
-  
+
   return highlighted;
 }
 
@@ -140,10 +193,20 @@ function escapeHtml(text: string): string {
  */
 function detectLanguage(code: string): string {
   // Check for common patterns
-  if (code.includes("async function") || code.includes("export default") || code.includes("=>")) {
-    return code.includes(": ") && (code.includes("<") || code.includes("interface")) ? "typescript" : "javascript";
+  if (
+    code.includes("async function") ||
+    code.includes("export default") ||
+    code.includes("=>")
+  ) {
+    return code.includes(": ") &&
+      (code.includes("<") || code.includes("interface"))
+      ? "typescript"
+      : "javascript";
   }
-  if (code.includes("def ") || code.includes("import ") && code.includes("from ")) {
+  if (
+    code.includes("def ") ||
+    (code.includes("import ") && code.includes("from "))
+  ) {
     return "python";
   }
   if (code.startsWith("{") || code.startsWith("[")) {
@@ -160,10 +223,14 @@ function detectLanguage(code: string): string {
   if (code.includes("[") && code.includes("]") && code.includes("=")) {
     return "toml";
   }
-  if (code.includes("npm ") || code.includes("wrangler ") || code.startsWith("#!")) {
+  if (
+    code.includes("npm ") ||
+    code.includes("wrangler ") ||
+    code.startsWith("#!")
+  ) {
     return "bash";
   }
-  
+
   return "javascript";
 }
 
@@ -180,22 +247,22 @@ export function CodeBlock({
   maxHeight = "400px"
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
-  
+
   // Auto-detect language if not provided
   const detectedLanguage = useMemo(() => {
     return language || detectLanguage(code);
   }, [code, language]);
-  
+
   // Apply syntax highlighting
   const highlightedCode = useMemo(() => {
     return highlightCode(code, detectedLanguage);
   }, [code, detectedLanguage]);
-  
+
   // Split into lines for line numbers
   const lines = useMemo(() => {
     return highlightedCode.split("\n");
   }, [highlightedCode]);
-  
+
   // Copy to clipboard handler
   const handleCopy = useCallback(async () => {
     try {
@@ -206,9 +273,11 @@ export function CodeBlock({
       console.error("Failed to copy:", err);
     }
   }, [code]);
-  
+
   return (
-    <div className={`relative group rounded-lg overflow-hidden border border-neutral-700 bg-neutral-900 ${className}`}>
+    <div
+      className={`relative group rounded-lg overflow-hidden border border-neutral-700 bg-neutral-900 ${className}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-neutral-800 border-b border-neutral-700">
         <div className="flex items-center gap-2">
@@ -222,7 +291,7 @@ export function CodeBlock({
             </span>
           )}
         </div>
-        
+
         {/* Copy button */}
         <button
           type="button"
@@ -243,7 +312,7 @@ export function CodeBlock({
           )}
         </button>
       </div>
-      
+
       {/* Code content */}
       <div
         className="overflow-auto p-4 font-mono text-sm leading-relaxed"
@@ -258,9 +327,9 @@ export function CodeBlock({
                     {index + 1}
                   </td>
                   <td className="text-neutral-100">
-                    <span 
+                    <span
                       // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized content
-                      dangerouslySetInnerHTML={{ __html: line || "&nbsp;" }} 
+                      dangerouslySetInnerHTML={{ __html: line || "&nbsp;" }}
                     />
                   </td>
                 </tr>
@@ -291,7 +360,9 @@ export interface InlineCodeProps {
 
 export function InlineCode({ children, className = "" }: InlineCodeProps) {
   return (
-    <code className={`px-1.5 py-0.5 rounded bg-neutral-800 text-[#F6821F] font-mono text-sm ${className}`}>
+    <code
+      className={`px-1.5 py-0.5 rounded bg-neutral-800 text-[#F6821F] font-mono text-sm ${className}`}
+    >
       {children}
     </code>
   );

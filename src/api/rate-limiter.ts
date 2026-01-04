@@ -1,9 +1,9 @@
 /**
  * Rate Limiter Utility
- * 
+ *
  * Simple in-memory rate limiter for the API routes.
  * In production, use Redis or Cloudflare's built-in rate limiting.
- * 
+ *
  * @module api/rate-limiter
  */
 
@@ -42,7 +42,7 @@ interface RateLimitResult {
 
 /**
  * In-memory rate limiter
- * 
+ *
  * Note: This is for development/single-instance use only.
  * For production, use:
  * - Cloudflare Rate Limiting (https://developers.cloudflare.com/waf/rate-limiting-rules/)
@@ -56,12 +56,12 @@ export class RateLimiter {
 
   constructor(config: Partial<RateLimitConfig> = {}) {
     this.config = {
-      maxRequests: config.maxRequests ?? 60,  // 60 requests
-      windowMs: config.windowMs ?? 60 * 1000, // per minute
+      maxRequests: config.maxRequests ?? 60, // 60 requests
+      windowMs: config.windowMs ?? 60 * 1000 // per minute
     };
 
     // Cleanup expired entries every minute
-    if (typeof setInterval !== 'undefined') {
+    if (typeof setInterval !== "undefined") {
       this.cleanupInterval = setInterval(() => this.cleanup(), 60 * 1000);
     }
   }
@@ -77,36 +77,36 @@ export class RateLimiter {
     if (!entry || now > entry.resetAt) {
       const resetAt = now + this.config.windowMs;
       this.store.set(key, { count: 1, resetAt });
-      
+
       return {
         allowed: true,
         remaining: this.config.maxRequests - 1,
         limit: this.config.maxRequests,
-        resetAt: new Date(resetAt),
+        resetAt: new Date(resetAt)
       };
     }
 
     // Within window
     if (entry.count < this.config.maxRequests) {
       entry.count++;
-      
+
       return {
         allowed: true,
         remaining: this.config.maxRequests - entry.count,
         limit: this.config.maxRequests,
-        resetAt: new Date(entry.resetAt),
+        resetAt: new Date(entry.resetAt)
       };
     }
 
     // Rate limited
     const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
-    
+
     return {
       allowed: false,
       remaining: 0,
       limit: this.config.maxRequests,
       resetAt: new Date(entry.resetAt),
-      retryAfter,
+      retryAfter
     };
   }
 
@@ -115,13 +115,13 @@ export class RateLimiter {
    */
   getHeaders(result: RateLimitResult): Record<string, string> {
     const headers: Record<string, string> = {
-      'X-RateLimit-Limit': String(result.limit),
-      'X-RateLimit-Remaining': String(result.remaining),
-      'X-RateLimit-Reset': result.resetAt.toISOString(),
+      "X-RateLimit-Limit": String(result.limit),
+      "X-RateLimit-Remaining": String(result.remaining),
+      "X-RateLimit-Reset": result.resetAt.toISOString()
     };
 
     if (result.retryAfter !== undefined) {
-      headers['Retry-After'] = String(result.retryAfter);
+      headers["Retry-After"] = String(result.retryAfter);
     }
 
     return headers;
@@ -171,13 +171,13 @@ export class RateLimiter {
 // Chat endpoint: 30 requests per minute
 export const chatRateLimiter = new RateLimiter({
   maxRequests: 30,
-  windowMs: 60 * 1000,
+  windowMs: 60 * 1000
 });
 
 // Tool endpoint: 60 requests per minute (lighter weight)
 export const toolRateLimiter = new RateLimiter({
   maxRequests: 60,
-  windowMs: 60 * 1000,
+  windowMs: 60 * 1000
 });
 
 // =============================================================================
@@ -190,23 +190,23 @@ export const toolRateLimiter = new RateLimiter({
  */
 export function getClientIdentifier(request: Request): string {
   // Try to get client IP from various headers
-  const forwardedFor = request.headers.get('x-forwarded-for');
+  const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
+    return forwardedFor.split(",")[0].trim();
   }
 
-  const realIp = request.headers.get('x-real-ip');
+  const realIp = request.headers.get("x-real-ip");
   if (realIp) {
     return realIp;
   }
 
-  const cfConnectingIp = request.headers.get('cf-connecting-ip');
+  const cfConnectingIp = request.headers.get("cf-connecting-ip");
   if (cfConnectingIp) {
     return cfConnectingIp;
   }
 
   // Fallback to a default (not ideal for production)
-  return 'anonymous';
+  return "anonymous";
 }
 
 /**
@@ -216,21 +216,21 @@ export function createRateLimitResponse(result: RateLimitResult): Response {
   return new Response(
     JSON.stringify({
       error: true,
-      message: 'Rate limit exceeded. Please slow down.',
-      code: 'RATE_LIMIT_EXCEEDED',
+      message: "Rate limit exceeded. Please slow down.",
+      code: "RATE_LIMIT_EXCEEDED",
       status: 429,
       details: {
         limit: result.limit,
         resetAt: result.resetAt.toISOString(),
-        retryAfter: result.retryAfter,
-      },
+        retryAfter: result.retryAfter
+      }
     }),
     {
       status: 429,
       headers: {
-        'Content-Type': 'application/json',
-        ...new RateLimiter().getHeaders(result),
-      },
+        "Content-Type": "application/json",
+        ...new RateLimiter().getHeaders(result)
+      }
     }
   );
 }

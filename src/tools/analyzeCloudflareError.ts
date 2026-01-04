@@ -1,9 +1,9 @@
 /**
  * analyzeCloudflareError - Tool for analyzing Cloudflare Worker error logs
- * 
+ *
  * This tool parses error logs, stack traces, and Worker console output to identify
  * common Cloudflare-specific errors and provide actionable debugging guidance.
- * 
+ *
  * @module tools/analyzeCloudflareError
  */
 
@@ -17,19 +17,19 @@ import { z } from "zod/v3";
 /**
  * Severity levels for error classification
  */
-export type ErrorSeverity = 'critical' | 'warning' | 'info';
+export type ErrorSeverity = "critical" | "warning" | "info";
 
 /**
  * Categories of Cloudflare Worker errors
  */
-export type CloudflareErrorCategory = 
-  | 'runtime-limits'
-  | 'binding-errors'
-  | 'network-errors'
-  | 'configuration'
-  | 'api-errors'
-  | 'security'
-  | 'unknown';
+export type CloudflareErrorCategory =
+  | "runtime-limits"
+  | "binding-errors"
+  | "network-errors"
+  | "configuration"
+  | "api-errors"
+  | "security"
+  | "unknown";
 
 /**
  * Structured response from error analysis
@@ -95,10 +95,10 @@ const ERROR_PATTERNS: ErrorPattern[] = [
   // Runtime Limit Errors
   // -------------------------------------------------------------------------
   {
-    id: 'cpu-time-exceeded',
-    name: 'CPU Time Limit Exceeded',
-    category: 'runtime-limits',
-    severity: 'critical',
+    id: "cpu-time-exceeded",
+    name: "CPU Time Limit Exceeded",
+    category: "runtime-limits",
+    severity: "critical",
     patterns: [
       /exceeded.*cpu.*time/i,
       /cpu.*time.*limit/i,
@@ -106,8 +106,9 @@ const ERROR_PATTERNS: ErrorPattern[] = [
       /Error 1102/i,
       /exceeded the CPU time limit/i
     ],
-    keywords: ['cpu', 'time limit', 'exceeded', '1102', 'timeout'],
-    rootCause: 'Your Worker script is performing too many CPU-intensive operations within a single request. The free tier allows 10ms CPU time, while paid plans allow 30-50ms (with option for 30s on Unbound).',
+    keywords: ["cpu", "time limit", "exceeded", "1102", "timeout"],
+    rootCause:
+      "Your Worker script is performing too many CPU-intensive operations within a single request. The free tier allows 10ms CPU time, while paid plans allow 30-50ms (with option for 30s on Unbound).",
     suggestedFix: `1. Identify expensive operations (JSON parsing, crypto, loops)
 2. Use streaming instead of buffering large responses
 3. Offload heavy computation to Durable Objects or Queues
@@ -133,20 +134,21 @@ export default {
     return response;
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/workers/platform/limits/#cpu-time',
+    docsLink:
+      "https://developers.cloudflare.com/workers/platform/limits/#cpu-time",
     bestPractices: [
-      'Profile your Worker using wrangler dev --inspect',
-      'Break down large operations into smaller chunks',
-      'Use Queues for background processing',
-      'Consider using Workers Unbound for compute-heavy workloads'
+      "Profile your Worker using wrangler dev --inspect",
+      "Break down large operations into smaller chunks",
+      "Use Queues for background processing",
+      "Consider using Workers Unbound for compute-heavy workloads"
     ]
   },
 
   {
-    id: 'memory-limit-exceeded',
-    name: 'Memory Limit Exceeded',
-    category: 'runtime-limits',
-    severity: 'critical',
+    id: "memory-limit-exceeded",
+    name: "Memory Limit Exceeded",
+    category: "runtime-limits",
+    severity: "critical",
     patterns: [
       /memory.*limit.*exceeded/i,
       /out of memory/i,
@@ -154,8 +156,9 @@ export default {
       /RangeError.*allocation/i,
       /heap.*limit/i
     ],
-    keywords: ['memory', 'heap', 'allocation', 'out of memory'],
-    rootCause: 'Your Worker is consuming more than the 128MB memory limit. This typically happens when processing large files, accumulating data in arrays/objects, or memory leaks in long-running Durable Objects.',
+    keywords: ["memory", "heap", "allocation", "out of memory"],
+    rootCause:
+      "Your Worker is consuming more than the 128MB memory limit. This typically happens when processing large files, accumulating data in arrays/objects, or memory leaks in long-running Durable Objects.",
     suggestedFix: `1. Stream large responses instead of buffering
 2. Avoid storing large objects in memory
 3. Process data in chunks
@@ -182,28 +185,30 @@ export default {
     return new Response(readable, response);
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/workers/platform/limits/#memory',
+    docsLink:
+      "https://developers.cloudflare.com/workers/platform/limits/#memory",
     bestPractices: [
-      'Use streaming APIs (TransformStream, ReadableStream)',
-      'Avoid JSON.parse() on large payloads - use streaming JSON parsers',
-      'Implement pagination for large datasets',
-      'Use R2 for file storage instead of in-memory processing'
+      "Use streaming APIs (TransformStream, ReadableStream)",
+      "Avoid JSON.parse() on large payloads - use streaming JSON parsers",
+      "Implement pagination for large datasets",
+      "Use R2 for file storage instead of in-memory processing"
     ]
   },
 
   {
-    id: 'subrequest-limit',
-    name: 'Subrequest Limit Exceeded',
-    category: 'runtime-limits',
-    severity: 'critical',
+    id: "subrequest-limit",
+    name: "Subrequest Limit Exceeded",
+    category: "runtime-limits",
+    severity: "critical",
     patterns: [
       /subrequest.*limit/i,
       /too many subrequests/i,
       /exceeded.*50.*subrequests/i,
       /Error 1101/i
     ],
-    keywords: ['subrequest', 'fetch', '50', 'limit', '1101'],
-    rootCause: 'Workers have a limit of 50 subrequests (fetch calls to external services) per request on the free tier, or 1000 on paid plans. This includes KV, D1, R2, and external API calls.',
+    keywords: ["subrequest", "fetch", "50", "limit", "1101"],
+    rootCause:
+      "Workers have a limit of 50 subrequests (fetch calls to external services) per request on the free tier, or 1000 on paid plans. This includes KV, D1, R2, and external API calls.",
     suggestedFix: `1. Batch multiple API calls where possible
 2. Use caching to reduce repeated requests
 3. Implement request deduplication
@@ -242,12 +247,13 @@ export default {
     return Response.json(results);
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/workers/platform/limits/#subrequests',
+    docsLink:
+      "https://developers.cloudflare.com/workers/platform/limits/#subrequests",
     bestPractices: [
-      'Use Cache API or KV for frequently accessed data',
-      'Batch API calls using bulk endpoints when available',
-      'Implement request coalescing for duplicate requests',
-      'Consider using Queues for fan-out patterns'
+      "Use Cache API or KV for frequently accessed data",
+      "Batch API calls using bulk endpoints when available",
+      "Implement request coalescing for duplicate requests",
+      "Consider using Queues for fan-out patterns"
     ]
   },
 
@@ -255,10 +261,10 @@ export default {
   // Binding Errors
   // -------------------------------------------------------------------------
   {
-    id: 'kv-binding-error',
-    name: 'KV Namespace Binding Error',
-    category: 'binding-errors',
-    severity: 'critical',
+    id: "kv-binding-error",
+    name: "KV Namespace Binding Error",
+    category: "binding-errors",
+    severity: "critical",
     patterns: [
       /kv.*binding.*not.*found/i,
       /kv.*namespace.*undefined/i,
@@ -266,8 +272,9 @@ export default {
       /env\..*is undefined.*kv/i,
       /KVNamespace/i
     ],
-    keywords: ['KV', 'binding', 'namespace', 'undefined', 'not found'],
-    rootCause: 'The KV namespace binding is not properly configured in wrangler.toml, or you\'re accessing it with the wrong name. The binding name in your code must match exactly what\'s in wrangler.toml.',
+    keywords: ["KV", "binding", "namespace", "undefined", "not found"],
+    rootCause:
+      "The KV namespace binding is not properly configured in wrangler.toml, or you're accessing it with the wrong name. The binding name in your code must match exactly what's in wrangler.toml.",
     suggestedFix: `1. Verify KV namespace exists: wrangler kv namespace list
 2. Check wrangler.toml has correct binding configuration
 3. Ensure binding name in code matches wrangler.toml exactly (case-sensitive)
@@ -291,20 +298,20 @@ export default {
     return new Response(value);
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/kv/get-started/',
+    docsLink: "https://developers.cloudflare.com/kv/get-started/",
     bestPractices: [
-      'Use consistent naming conventions for bindings',
-      'Add TypeScript types for your Env interface',
-      'Test bindings locally with wrangler dev before deploying',
-      'Use wrangler kv namespace list to verify namespaces'
+      "Use consistent naming conventions for bindings",
+      "Add TypeScript types for your Env interface",
+      "Test bindings locally with wrangler dev before deploying",
+      "Use wrangler kv namespace list to verify namespaces"
     ]
   },
 
   {
-    id: 'd1-binding-error',
-    name: 'D1 Database Binding Error',
-    category: 'binding-errors',
-    severity: 'critical',
+    id: "d1-binding-error",
+    name: "D1 Database Binding Error",
+    category: "binding-errors",
+    severity: "critical",
     patterns: [
       /d1.*binding.*not.*found/i,
       /d1.*database.*undefined/i,
@@ -312,8 +319,9 @@ export default {
       /D1_ERROR/i,
       /env\.DB.*undefined/i
     ],
-    keywords: ['D1', 'database', 'binding', 'prepare', 'statement', 'SQL'],
-    rootCause: 'The D1 database binding is missing or incorrectly configured. This can also occur when SQL syntax errors cause prepare() to fail.',
+    keywords: ["D1", "database", "binding", "prepare", "statement", "SQL"],
+    rootCause:
+      "The D1 database binding is missing or incorrectly configured. This can also occur when SQL syntax errors cause prepare() to fail.",
     suggestedFix: `1. Verify D1 database exists: wrangler d1 list
 2. Check wrangler.toml has correct binding
 3. Test SQL queries locally: wrangler d1 execute <DB> --local --command "SELECT 1"
@@ -347,20 +355,20 @@ export default {
     }
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/d1/get-started/',
+    docsLink: "https://developers.cloudflare.com/d1/get-started/",
     bestPractices: [
-      'Always use parameterized queries to prevent SQL injection',
-      'Run migrations with wrangler d1 migrations apply',
-      'Test queries locally before deploying',
-      'Implement proper error handling for database operations'
+      "Always use parameterized queries to prevent SQL injection",
+      "Run migrations with wrangler d1 migrations apply",
+      "Test queries locally before deploying",
+      "Implement proper error handling for database operations"
     ]
   },
 
   {
-    id: 'r2-binding-error',
-    name: 'R2 Bucket Binding Error',
-    category: 'binding-errors',
-    severity: 'critical',
+    id: "r2-binding-error",
+    name: "R2 Bucket Binding Error",
+    category: "binding-errors",
+    severity: "critical",
     patterns: [
       /r2.*binding.*not.*found/i,
       /r2.*bucket.*undefined/i,
@@ -368,8 +376,9 @@ export default {
       /env\.BUCKET.*undefined/i,
       /cannot.*put.*r2/i
     ],
-    keywords: ['R2', 'bucket', 'binding', 'storage', 'object'],
-    rootCause: 'The R2 bucket binding is not configured in wrangler.toml, or the bucket doesn\'t exist in your Cloudflare account.',
+    keywords: ["R2", "bucket", "binding", "storage", "object"],
+    rootCause:
+      "The R2 bucket binding is not configured in wrangler.toml, or the bucket doesn't exist in your Cloudflare account.",
     suggestedFix: `1. Create bucket if needed: wrangler r2 bucket create <name>
 2. Add binding to wrangler.toml
 3. Verify bucket exists: wrangler r2 bucket list
@@ -409,20 +418,21 @@ export default {
     }
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/r2/api/workers/workers-api-reference/',
+    docsLink:
+      "https://developers.cloudflare.com/r2/api/workers/workers-api-reference/",
     bestPractices: [
-      'Set appropriate content-type headers when uploading',
-      'Implement proper error handling for missing objects',
-      'Use multipart uploads for files > 100MB',
-      'Consider using presigned URLs for client-side uploads'
+      "Set appropriate content-type headers when uploading",
+      "Implement proper error handling for missing objects",
+      "Use multipart uploads for files > 100MB",
+      "Consider using presigned URLs for client-side uploads"
     ]
   },
 
   {
-    id: 'durable-object-binding-error',
-    name: 'Durable Object Binding Error',
-    category: 'binding-errors',
-    severity: 'critical',
+    id: "durable-object-binding-error",
+    name: "Durable Object Binding Error",
+    category: "binding-errors",
+    severity: "critical",
     patterns: [
       /durable.*object.*binding/i,
       /DurableObjectNamespace/i,
@@ -430,8 +440,9 @@ export default {
       /cannot.*idFromName/i,
       /class.*not.*exported/i
     ],
-    keywords: ['Durable Object', 'binding', 'namespace', 'idFromName', 'class'],
-    rootCause: 'The Durable Object class is not exported from the main entry point, or the binding configuration in wrangler.toml doesn\'t match the exported class name.',
+    keywords: ["Durable Object", "binding", "namespace", "idFromName", "class"],
+    rootCause:
+      "The Durable Object class is not exported from the main entry point, or the binding configuration in wrangler.toml doesn't match the exported class name.",
     suggestedFix: `1. Ensure DO class is exported from your main file
 2. Verify class_name in wrangler.toml matches the export exactly
 3. Add migrations for new DO classes
@@ -469,12 +480,12 @@ export default {
     return stub.fetch(request);
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/durable-objects/get-started/',
+    docsLink: "https://developers.cloudflare.com/durable-objects/get-started/",
     bestPractices: [
-      'Always run migrations when adding new DO classes',
-      'Export DO classes from your main entry file',
-      'Use idFromName for stable IDs based on business logic',
-      'Implement proper error handling in DO fetch methods'
+      "Always run migrations when adding new DO classes",
+      "Export DO classes from your main entry file",
+      "Use idFromName for stable IDs based on business logic",
+      "Implement proper error handling in DO fetch methods"
     ]
   },
 
@@ -482,10 +493,10 @@ export default {
   // Network / Fetch Errors
   // -------------------------------------------------------------------------
   {
-    id: 'cors-error',
-    name: 'CORS Policy Error',
-    category: 'security',
-    severity: 'warning',
+    id: "cors-error",
+    name: "CORS Policy Error",
+    category: "security",
+    severity: "warning",
     patterns: [
       /cors/i,
       /access-control-allow-origin/i,
@@ -494,8 +505,15 @@ export default {
       /preflight/i,
       /no 'access-control-allow-origin'/i
     ],
-    keywords: ['CORS', 'cross-origin', 'preflight', 'OPTIONS', 'Access-Control'],
-    rootCause: 'The Worker is not returning proper CORS headers, or is not handling OPTIONS preflight requests. Browsers block cross-origin requests without proper CORS headers.',
+    keywords: [
+      "CORS",
+      "cross-origin",
+      "preflight",
+      "OPTIONS",
+      "Access-Control"
+    ],
+    rootCause:
+      "The Worker is not returning proper CORS headers, or is not handling OPTIONS preflight requests. Browsers block cross-origin requests without proper CORS headers.",
     suggestedFix: `1. Add CORS headers to all responses
 2. Handle OPTIONS preflight requests
 3. Set appropriate allowed origins (avoid * in production)
@@ -539,20 +557,21 @@ function handleCors(request: Request, response: Response, allowedOrigins: string
   }
   return response;
 }`,
-    docsLink: 'https://developers.cloudflare.com/workers/examples/cors-header-proxy/',
+    docsLink:
+      "https://developers.cloudflare.com/workers/examples/cors-header-proxy/",
     bestPractices: [
-      'Use specific origins instead of * in production',
-      'Cache preflight responses with Access-Control-Max-Age',
-      'Only allow necessary HTTP methods and headers',
-      'Consider using Cloudflare Access for authentication instead of CORS'
+      "Use specific origins instead of * in production",
+      "Cache preflight responses with Access-Control-Max-Age",
+      "Only allow necessary HTTP methods and headers",
+      "Consider using Cloudflare Access for authentication instead of CORS"
     ]
   },
 
   {
-    id: 'fetch-failed',
-    name: 'Fetch Request Failed',
-    category: 'network-errors',
-    severity: 'warning',
+    id: "fetch-failed",
+    name: "Fetch Request Failed",
+    category: "network-errors",
+    severity: "warning",
     patterns: [
       /fetch.*failed/i,
       /network.*error/i,
@@ -561,8 +580,9 @@ function handleCors(request: Request, response: Response, allowedOrigins: string
       /ENOTFOUND/i,
       /ECONNREFUSED/i
     ],
-    keywords: ['fetch', 'network', 'connection', 'refused', 'timeout'],
-    rootCause: 'The fetch request to an external service failed. This could be due to DNS resolution failure, connection timeout, SSL certificate issues, or the target server being down.',
+    keywords: ["fetch", "network", "connection", "refused", "timeout"],
+    rootCause:
+      "The fetch request to an external service failed. This could be due to DNS resolution failure, connection timeout, SSL certificate issues, or the target server being down.",
     suggestedFix: `1. Verify the URL is correct and accessible
 2. Add timeout handling with AbortController
 3. Implement retry logic with exponential backoff
@@ -622,12 +642,12 @@ export default {
     }
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/workers/runtime-apis/fetch/',
+    docsLink: "https://developers.cloudflare.com/workers/runtime-apis/fetch/",
     bestPractices: [
-      'Always implement timeout handling',
-      'Use retry logic with exponential backoff',
-      'Cache responses when appropriate',
-      'Monitor and alert on fetch failure rates'
+      "Always implement timeout handling",
+      "Use retry logic with exponential backoff",
+      "Cache responses when appropriate",
+      "Monitor and alert on fetch failure rates"
     ]
   },
 
@@ -635,10 +655,10 @@ export default {
   // Configuration Errors
   // -------------------------------------------------------------------------
   {
-    id: 'invalid-wrangler-config',
-    name: 'Invalid Wrangler Configuration',
-    category: 'configuration',
-    severity: 'critical',
+    id: "invalid-wrangler-config",
+    name: "Invalid Wrangler Configuration",
+    category: "configuration",
+    severity: "critical",
     patterns: [
       /wrangler\.toml/i,
       /configuration.*error/i,
@@ -646,8 +666,15 @@ export default {
       /missing.*required.*field/i,
       /failed to parse/i
     ],
-    keywords: ['wrangler.toml', 'configuration', 'invalid', 'parse', 'required'],
-    rootCause: 'The wrangler.toml file has syntax errors, missing required fields, or invalid values. This prevents deployment and local development.',
+    keywords: [
+      "wrangler.toml",
+      "configuration",
+      "invalid",
+      "parse",
+      "required"
+    ],
+    rootCause:
+      "The wrangler.toml file has syntax errors, missing required fields, or invalid values. This prevents deployment and local development.",
     suggestedFix: `1. Validate TOML syntax (check for typos, missing quotes)
 2. Ensure all required fields are present
 3. Verify binding IDs are correct UUIDs
@@ -681,28 +708,30 @@ database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # UUID format
 bindings = [
   { name = "MY_DO", class_name = "MyDurableObject" }
 ]`,
-    docsLink: 'https://developers.cloudflare.com/workers/wrangler/configuration/',
+    docsLink:
+      "https://developers.cloudflare.com/workers/wrangler/configuration/",
     bestPractices: [
-      'Use wrangler deploy --dry-run to validate before deploying',
-      'Keep wrangler.toml in version control',
-      'Use environment-specific configurations with [env.production]',
-      'Document all bindings with comments'
+      "Use wrangler deploy --dry-run to validate before deploying",
+      "Keep wrangler.toml in version control",
+      "Use environment-specific configurations with [env.production]",
+      "Document all bindings with comments"
     ]
   },
 
   {
-    id: 'env-variable-undefined',
-    name: 'Environment Variable Not Found',
-    category: 'configuration',
-    severity: 'warning',
+    id: "env-variable-undefined",
+    name: "Environment Variable Not Found",
+    category: "configuration",
+    severity: "warning",
     patterns: [
       /env\.\w+.*undefined/i,
       /process\.env\.\w+.*undefined/i,
       /secret.*not.*found/i,
       /missing.*environment/i
     ],
-    keywords: ['env', 'undefined', 'secret', 'variable', 'missing'],
-    rootCause: 'An environment variable or secret is referenced in code but not defined in wrangler.toml [vars] section or set via wrangler secret.',
+    keywords: ["env", "undefined", "secret", "variable", "missing"],
+    rootCause:
+      "An environment variable or secret is referenced in code but not defined in wrangler.toml [vars] section or set via wrangler secret.",
     suggestedFix: `1. For non-sensitive values, add to wrangler.toml [vars]
 2. For secrets, use: wrangler secret put SECRET_NAME
 3. For local dev, create .dev.vars file
@@ -740,12 +769,13 @@ export default {
     return Response.json({ status: 'ok' });
   }
 }`,
-    docsLink: 'https://developers.cloudflare.com/workers/configuration/environment-variables/',
+    docsLink:
+      "https://developers.cloudflare.com/workers/configuration/environment-variables/",
     bestPractices: [
-      'Never commit secrets to version control',
-      'Use .dev.vars for local secrets (add to .gitignore)',
-      'Document required environment variables in README',
-      'Validate required env vars at startup'
+      "Never commit secrets to version control",
+      "Use .dev.vars for local secrets (add to .gitignore)",
+      "Document required environment variables in README",
+      "Validate required env vars at startup"
     ]
   },
 
@@ -753,10 +783,10 @@ export default {
   // API Errors
   // -------------------------------------------------------------------------
   {
-    id: 'workers-ai-error',
-    name: 'Workers AI Model Error',
-    category: 'api-errors',
-    severity: 'warning',
+    id: "workers-ai-error",
+    name: "Workers AI Model Error",
+    category: "api-errors",
+    severity: "warning",
     patterns: [
       /workers.*ai.*error/i,
       /@cf\/.*model/i,
@@ -764,8 +794,9 @@ export default {
       /model.*not.*found/i,
       /inference.*error/i
     ],
-    keywords: ['Workers AI', 'AI.run', 'model', 'inference', 'Llama'],
-    rootCause: 'The Workers AI request failed. This could be due to an invalid model name, malformed input, rate limiting, or the model being temporarily unavailable.',
+    keywords: ["Workers AI", "AI.run", "model", "inference", "Llama"],
+    rootCause:
+      "The Workers AI request failed. This could be due to an invalid model name, malformed input, rate limiting, or the model being temporarily unavailable.",
     suggestedFix: `1. Verify model name is correct (check docs for available models)
 2. Validate input format matches model requirements
 3. Implement error handling and retries
@@ -816,20 +847,20 @@ export default {
 // Text: @cf/meta/llama-3.3-70b-instruct-fp8-fast
 // Embeddings: @cf/baai/bge-base-en-v1.5
 // Image: @cf/stabilityai/stable-diffusion-xl-base-1.0`,
-    docsLink: 'https://developers.cloudflare.com/workers-ai/models/',
+    docsLink: "https://developers.cloudflare.com/workers-ai/models/",
     bestPractices: [
-      'Use appropriate models for your use case',
-      'Set reasonable max_tokens to control costs',
-      'Implement streaming for long responses',
-      'Cache AI responses when appropriate'
+      "Use appropriate models for your use case",
+      "Set reasonable max_tokens to control costs",
+      "Implement streaming for long responses",
+      "Cache AI responses when appropriate"
     ]
   },
 
   {
-    id: 'script-too-large',
-    name: 'Worker Script Size Limit Exceeded',
-    category: 'runtime-limits',
-    severity: 'critical',
+    id: "script-too-large",
+    name: "Worker Script Size Limit Exceeded",
+    category: "runtime-limits",
+    severity: "critical",
     patterns: [
       /script.*too.*large/i,
       /size.*limit.*exceeded/i,
@@ -837,8 +868,9 @@ export default {
       /10.*MB.*limit/i,
       /worker.*size/i
     ],
-    keywords: ['size', 'limit', 'bundle', 'large', 'MB', 'script'],
-    rootCause: 'The Worker bundle exceeds the size limit (10MB compressed for free, 10MB for paid). This usually happens when bundling large dependencies or assets.',
+    keywords: ["size", "limit", "bundle", "large", "MB", "script"],
+    rootCause:
+      "The Worker bundle exceeds the size limit (10MB compressed for free, 10MB for paid). This usually happens when bundling large dependencies or assets.",
     suggestedFix: `1. Analyze bundle with wrangler deploy --dry-run --outdir dist
 2. Remove unused dependencies
 3. Use dynamic imports for rarely-used code
@@ -871,12 +903,13 @@ import { format } from 'date-fns';
 
 // Use dynamic imports for optional features
 const handler = await import('./optional-handler');`,
-    docsLink: 'https://developers.cloudflare.com/workers/platform/limits/#worker-size',
+    docsLink:
+      "https://developers.cloudflare.com/workers/platform/limits/#worker-size",
     bestPractices: [
-      'Regularly audit dependencies with npm ls or bundlephobia.com',
-      'Use tree-shaking friendly imports',
-      'Store large datasets in KV, R2, or D1',
-      'Consider Workers for Platforms for multi-tenant apps'
+      "Regularly audit dependencies with npm ls or bundlephobia.com",
+      "Use tree-shaking friendly imports",
+      "Store large datasets in KV, R2, or D1",
+      "Consider Workers for Platforms for multi-tenant apps"
     ]
   }
 ];
@@ -888,27 +921,24 @@ const handler = await import('./optional-handler');`,
 /**
  * Calculate confidence score based on pattern matches and keyword hits
  */
-function calculateConfidence(
-  errorLog: string, 
-  pattern: ErrorPattern
-): number {
+function calculateConfidence(errorLog: string, pattern: ErrorPattern): number {
   let score = 0;
   const normalizedLog = errorLog.toLowerCase();
-  
+
   // Check regex patterns (high weight)
   for (const regex of pattern.patterns) {
     if (regex.test(errorLog)) {
       score += 0.3;
     }
   }
-  
+
   // Check keywords (lower weight)
   for (const keyword of pattern.keywords) {
     if (normalizedLog.includes(keyword.toLowerCase())) {
       score += 0.1;
     }
   }
-  
+
   // Cap at 1.0
   return Math.min(score, 1.0);
 }
@@ -921,17 +951,17 @@ function findMatchingPatterns(errorLog: string): Array<{
   confidence: number;
 }> {
   const matches: Array<{ pattern: ErrorPattern; confidence: number }> = [];
-  
+
   for (const pattern of ERROR_PATTERNS) {
     const confidence = calculateConfidence(errorLog, pattern);
     if (confidence >= 0.2) {
       matches.push({ pattern, confidence });
     }
   }
-  
+
   // Sort by confidence (highest first)
   matches.sort((a, b) => b.confidence - a.confidence);
-  
+
   return matches;
 }
 
@@ -957,51 +987,56 @@ function patternToResult(
 
 /**
  * Main function to analyze Cloudflare Worker error logs
- * 
+ *
  * @param errorLog - The error log string to analyze (stack trace, console output, etc.)
  * @returns Analysis result with identified error type, cause, and fix
- * 
+ *
  * @example
  * ```typescript
  * const result = analyzeCloudflareErrorFn("Error 1102: Worker exceeded CPU time limit");
  * console.log(result.suggestedFix);
  * ```
  */
-export function analyzeCloudflareErrorFn(errorLog: string): ErrorAnalysisResult {
+export function analyzeCloudflareErrorFn(
+  errorLog: string
+): ErrorAnalysisResult {
   if (!errorLog || errorLog.trim().length === 0) {
     return {
-      errorType: 'Empty Error Log',
-      category: 'unknown',
-      severity: 'info',
-      rootCause: 'No error log was provided for analysis.',
-      suggestedFix: 'Please provide the complete error log, including any stack traces or console output.',
+      errorType: "Empty Error Log",
+      category: "unknown",
+      severity: "info",
+      rootCause: "No error log was provided for analysis.",
+      suggestedFix:
+        "Please provide the complete error log, including any stack traces or console output.",
       confidence: 0
     };
   }
-  
+
   const matches = findMatchingPatterns(errorLog);
-  
+
   if (matches.length === 0) {
     return {
-      errorType: 'Unrecognized Error',
-      category: 'unknown',
-      severity: 'warning',
-      rootCause: 'This error pattern is not in our database. It may be a custom application error or a new Cloudflare error type.',
+      errorType: "Unrecognized Error",
+      category: "unknown",
+      severity: "warning",
+      rootCause:
+        "This error pattern is not in our database. It may be a custom application error or a new Cloudflare error type.",
       suggestedFix: `1. Check the Cloudflare Workers status page for outages
 2. Search the Cloudflare Discord community for similar errors
 3. Review the stack trace for application-specific issues
 4. Check wrangler logs for more context: wrangler tail`,
-      docsLink: 'https://developers.cloudflare.com/workers/observability/logging/',
+      docsLink:
+        "https://developers.cloudflare.com/workers/observability/logging/",
       bestPractices: [
-        'Use structured logging (console.log(JSON.stringify(data)))',
-        'Add error boundaries with try/catch blocks',
-        'Enable wrangler tail for real-time logs',
-        'Consider using Cloudflare Logpush for production debugging'
+        "Use structured logging (console.log(JSON.stringify(data)))",
+        "Add error boundaries with try/catch blocks",
+        "Enable wrangler tail for real-time logs",
+        "Consider using Cloudflare Logpush for production debugging"
       ],
       confidence: 0
     };
   }
-  
+
   // Return the highest confidence match
   const bestMatch = matches[0];
   return patternToResult(bestMatch.pattern, bestMatch.confidence);
@@ -1010,8 +1045,10 @@ export function analyzeCloudflareErrorFn(errorLog: string): ErrorAnalysisResult 
 /**
  * Analyze multiple error logs at once
  */
-export function analyzeMultipleErrors(errorLogs: string[]): ErrorAnalysisResult[] {
-  return errorLogs.map(log => analyzeCloudflareErrorFn(log));
+export function analyzeMultipleErrors(
+  errorLogs: string[]
+): ErrorAnalysisResult[] {
+  return errorLogs.map((log) => analyzeCloudflareErrorFn(log));
 }
 
 /**
@@ -1023,7 +1060,7 @@ export function getKnownErrorPatterns(): Array<{
   category: CloudflareErrorCategory;
   severity: ErrorSeverity;
 }> {
-  return ERROR_PATTERNS.map(p => ({
+  return ERROR_PATTERNS.map((p) => ({
     id: p.id,
     name: p.name,
     category: p.category,
@@ -1039,17 +1076,21 @@ export function getKnownErrorPatterns(): Array<{
  * Zod schema for the error analysis input
  */
 const analyzeCloudflareErrorSchema = z.object({
-  errorLog: z.string().describe(
-    'The error log to analyze. Can include stack traces, error messages, Worker console output, or wrangler deployment errors.'
-  ),
-  includeCodeExamples: z.boolean().optional().default(true).describe(
-    'Whether to include code examples in the response'
-  )
+  errorLog: z
+    .string()
+    .describe(
+      "The error log to analyze. Can include stack traces, error messages, Worker console output, or wrangler deployment errors."
+    ),
+  includeCodeExamples: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe("Whether to include code examples in the response")
 });
 
 /**
  * AI Tool: Analyze Cloudflare Worker errors and provide debugging guidance
- * 
+ *
  * This tool can be used by the AI assistant to automatically analyze
  * error logs and provide specific, actionable fixes.
  */
@@ -1067,7 +1108,7 @@ Provide the complete error log for best results.`,
   inputSchema: analyzeCloudflareErrorSchema,
   execute: async ({ errorLog, includeCodeExamples }) => {
     const result = analyzeCloudflareErrorFn(errorLog);
-    
+
     // Format response for the AI
     let response = `## Error Analysis: ${result.errorType}
 
@@ -1101,7 +1142,7 @@ ${result.docsLink}`;
       response += `
 
 ### Best Practices
-${result.bestPractices.map(bp => `- ${bp}`).join('\n')}`;
+${result.bestPractices.map((bp) => `- ${bp}`).join("\n")}`;
     }
 
     return response;

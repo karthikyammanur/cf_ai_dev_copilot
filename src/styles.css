@@ -7,9 +7,9 @@
 
 /* Cloudflare Orange accent color */
 :root {
-  --cf-orange: #F6821F;
-  --cf-orange-dark: #E5720E;
-  --cf-orange-light: #FF9A3D;
+  --cf-orange: #f6821f;
+  --cf-orange-dark: #e5720e;
+  --cf-orange-light: #ff9a3d;
 }
 
 /* Custom scrollbar for dark mode */

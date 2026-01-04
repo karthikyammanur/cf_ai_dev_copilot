@@ -1,21 +1,21 @@
 /**
  * DevCopilotAgent - Durable Object for managing stateful AI conversations
- * 
+ *
  * This Durable Object provides persistent storage for:
  * - Conversation history between user and AI assistant
  * - Project context (Worker code, error logs, resolved issues)
  * - Session management with timestamps
- * 
+ *
  * State Management Strategy:
  * - Uses SQLite storage (via Durable Objects SQL API) for persistence
  * - Conversation messages are stored in a dedicated table
  * - Project context is stored as JSON in a separate table
  * - Session metadata tracks activity for cleanup/expiration
- * 
+ *
  * @see https://developers.cloudflare.com/durable-objects/
  */
 
-import { DurableObject } from 'cloudflare:workers';
+import { DurableObject } from "cloudflare:workers";
 import type {
   ConversationMessage,
   ProjectContext,
@@ -25,7 +25,7 @@ import type {
   StateOperationResult,
   ResolvedIssue,
   MessageMetadata
-} from '../types';
+} from "../types";
 
 /**
  * Generate a unique ID for messages and sessions
@@ -48,14 +48,14 @@ function getCurrentTimestamp(): string {
 export class DevCopilotAgent extends DurableObject<Env> {
   /** SQL database instance for persistent storage */
   private sql: SqlStorage;
-  
+
   /** Cached session info for quick access */
   private sessionCache: SessionInfo | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     this.sql = ctx.storage.sql;
-    
+
     // Initialize database tables on first instantiation
     this.initializeDatabase();
   }
@@ -117,8 +117,10 @@ export class DevCopilotAgent extends DurableObject<Env> {
    * Ensure a session exists, creating one if necessary
    */
   private ensureSession(): SessionInfo {
-    const existing = this.sql.exec(`SELECT * FROM session_info WHERE id = 1`).one();
-    
+    const existing = this.sql
+      .exec(`SELECT * FROM session_info WHERE id = 1`)
+      .one();
+
     if (existing) {
       this.sessionCache = {
         sessionId: existing.session_id as string,
@@ -133,11 +135,16 @@ export class DevCopilotAgent extends DurableObject<Env> {
     // Create new session
     const now = getCurrentTimestamp();
     const sessionId = generateId();
-    
-    this.sql.exec(`
+
+    this.sql.exec(
+      `
       INSERT INTO session_info (id, session_id, created_at, last_activity_at, message_count, is_active)
       VALUES (1, ?, ?, ?, 0, 1)
-    `, sessionId, now, now);
+    `,
+      sessionId,
+      now,
+      now
+    );
 
     this.sessionCache = {
       sessionId,
@@ -155,10 +162,13 @@ export class DevCopilotAgent extends DurableObject<Env> {
    */
   private updateSessionActivity(): void {
     const now = getCurrentTimestamp();
-    this.sql.exec(`
+    this.sql.exec(
+      `
       UPDATE session_info SET last_activity_at = ? WHERE id = 1
-    `, now);
-    
+    `,
+      now
+    );
+
     if (this.sessionCache) {
       this.sessionCache.lastActivityAt = now;
     }
@@ -171,7 +181,7 @@ export class DevCopilotAgent extends DurableObject<Env> {
     this.sql.exec(`
       UPDATE session_info SET message_count = message_count + 1 WHERE id = 1
     `);
-    
+
     if (this.sessionCache) {
       this.sessionCache.messageCount++;
     }
@@ -183,14 +193,14 @@ export class DevCopilotAgent extends DurableObject<Env> {
 
   /**
    * Add a new message to the conversation history
-   * 
+   *
    * @param role - The role of the message sender ('user', 'assistant', 'system')
    * @param content - The message content
    * @param metadata - Optional metadata for the message
    * @returns The created message with its ID and timestamp
    */
   async addMessage(
-    role: 'user' | 'assistant' | 'system',
+    role: "user" | "assistant" | "system",
     content: string,
     metadata?: MessageMetadata
   ): Promise<ConversationMessage> {
@@ -199,10 +209,17 @@ export class DevCopilotAgent extends DurableObject<Env> {
     const metadataJson = metadata ? JSON.stringify(metadata) : null;
 
     try {
-      this.sql.exec(`
+      this.sql.exec(
+        `
         INSERT INTO messages (id, role, content, timestamp, metadata)
         VALUES (?, ?, ?, ?, ?)
-      `, id, role, content, timestamp, metadataJson);
+      `,
+        id,
+        role,
+        content,
+        timestamp,
+        metadataJson
+      );
 
       this.incrementMessageCount();
       this.updateSessionActivity();
@@ -217,44 +234,48 @@ export class DevCopilotAgent extends DurableObject<Env> {
 
       return message;
     } catch (error) {
-      console.error('Failed to add message:', error);
-      throw new Error(`Failed to add message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Failed to add message:", error);
+      throw new Error(
+        `Failed to add message: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   }
 
   /**
    * Retrieve conversation history with optional filtering
-   * 
+   *
    * @param options - Options for filtering and limiting results
    * @returns Array of conversation messages
    */
-  async getConversationHistory(options?: GetHistoryOptions): Promise<ConversationMessage[]> {
+  async getConversationHistory(
+    options?: GetHistoryOptions
+  ): Promise<ConversationMessage[]> {
     try {
-      let query = 'SELECT * FROM messages WHERE 1=1';
+      let query = "SELECT * FROM messages WHERE 1=1";
       const params: (string | number)[] = [];
 
       // Apply filters
       if (options?.role) {
-        query += ' AND role = ?';
+        query += " AND role = ?";
         params.push(options.role);
       }
 
       if (options?.after) {
-        query += ' AND timestamp > ?';
+        query += " AND timestamp > ?";
         params.push(options.after);
       }
 
       if (options?.before) {
-        query += ' AND timestamp < ?';
+        query += " AND timestamp < ?";
         params.push(options.before);
       }
 
       // Order by timestamp (newest first for limit, then reverse)
-      query += ' ORDER BY timestamp DESC';
+      query += " ORDER BY timestamp DESC";
 
       // Apply limit
       if (options?.limit && options.limit > 0) {
-        query += ' LIMIT ?';
+        query += " LIMIT ?";
         params.push(options.limit);
       }
 
@@ -262,9 +283,9 @@ export class DevCopilotAgent extends DurableObject<Env> {
       const rows = cursor.toArray();
 
       // Parse rows into ConversationMessage objects and reverse to get chronological order
-      const messages: ConversationMessage[] = rows.reverse().map(row => ({
+      const messages: ConversationMessage[] = rows.reverse().map((row) => ({
         id: row.id as string,
-        role: row.role as 'user' | 'assistant' | 'system',
+        role: row.role as "user" | "assistant" | "system",
         content: row.content as string,
         timestamp: row.timestamp as string,
         metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
@@ -273,8 +294,10 @@ export class DevCopilotAgent extends DurableObject<Env> {
       this.updateSessionActivity();
       return messages;
     } catch (error) {
-      console.error('Failed to get conversation history:', error);
-      throw new Error(`Failed to get conversation history: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Failed to get conversation history:", error);
+      throw new Error(
+        `Failed to get conversation history: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -282,7 +305,9 @@ export class DevCopilotAgent extends DurableObject<Env> {
    * Get total message count in the conversation
    */
   async getMessageCount(): Promise<number> {
-    const result = this.sql.exec(`SELECT COUNT(*) as count FROM messages`).one();
+    const result = this.sql
+      .exec(`SELECT COUNT(*) as count FROM messages`)
+      .one();
     return (result?.count as number) ?? 0;
   }
 
@@ -294,7 +319,7 @@ export class DevCopilotAgent extends DurableObject<Env> {
       this.sql.exec(`DELETE FROM messages WHERE id = ?`, messageId);
       return true;
     } catch (error) {
-      console.error('Failed to delete message:', error);
+      console.error("Failed to delete message:", error);
       return false;
     }
   }
@@ -306,14 +331,16 @@ export class DevCopilotAgent extends DurableObject<Env> {
   /**
    * Update the project context with new information
    * Merges with existing context (doesn't overwrite undefined fields)
-   * 
+   *
    * @param context - Partial project context to update
    */
-  async updateProjectContext(context: Partial<ProjectContext>): Promise<StateOperationResult> {
+  async updateProjectContext(
+    context: Partial<ProjectContext>
+  ): Promise<StateOperationResult> {
     try {
       // Get existing context first
       const existing = await this.getProjectContext();
-      
+
       // Merge contexts
       const merged: ProjectContext = {
         ...existing,
@@ -326,15 +353,24 @@ export class DevCopilotAgent extends DurableObject<Env> {
         merged.errorLogs = [...existing.errorLogs, ...context.errorLogs];
       }
       if (context.resolvedIssues && existing.resolvedIssues) {
-        merged.resolvedIssues = [...existing.resolvedIssues, ...context.resolvedIssues];
+        merged.resolvedIssues = [
+          ...existing.resolvedIssues,
+          ...context.resolvedIssues
+        ];
       }
       if (context.cloudflareServices && existing.cloudflareServices) {
         // Deduplicate services
-        merged.cloudflareServices = [...new Set([...existing.cloudflareServices, ...context.cloudflareServices])];
+        merged.cloudflareServices = [
+          ...new Set([
+            ...existing.cloudflareServices,
+            ...context.cloudflareServices
+          ])
+        ];
       }
 
       // Upsert the context
-      this.sql.exec(`
+      this.sql.exec(
+        `
         INSERT INTO project_context (id, worker_code, error_logs, resolved_issues, cloudflare_services, project_name, last_updated)
         VALUES (1, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
@@ -348,7 +384,9 @@ export class DevCopilotAgent extends DurableObject<Env> {
         merged.workerCode ?? null,
         merged.errorLogs ? JSON.stringify(merged.errorLogs) : null,
         merged.resolvedIssues ? JSON.stringify(merged.resolvedIssues) : null,
-        merged.cloudflareServices ? JSON.stringify(merged.cloudflareServices) : null,
+        merged.cloudflareServices
+          ? JSON.stringify(merged.cloudflareServices)
+          : null,
         merged.projectName ?? null,
         merged.lastUpdated ?? null
       );
@@ -357,44 +395,52 @@ export class DevCopilotAgent extends DurableObject<Env> {
 
       return { success: true, data: merged };
     } catch (error) {
-      console.error('Failed to update project context:', error);
+      console.error("Failed to update project context:", error);
       return {
         success: false,
-        error: `Failed to update project context: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: `Failed to update project context: ${error instanceof Error ? error.message : "Unknown error"}`
       };
     }
   }
 
   /**
    * Get the current project context
-   * 
+   *
    * @returns The current project context or empty object if none exists
    */
   async getProjectContext(): Promise<ProjectContext> {
     try {
-      const row = this.sql.exec(`SELECT * FROM project_context WHERE id = 1`).one();
-      
+      const row = this.sql
+        .exec(`SELECT * FROM project_context WHERE id = 1`)
+        .one();
+
       if (!row) {
         return {};
       }
 
       return {
         workerCode: row.worker_code as string | undefined,
-        errorLogs: row.error_logs ? JSON.parse(row.error_logs as string) : undefined,
-        resolvedIssues: row.resolved_issues ? JSON.parse(row.resolved_issues as string) : undefined,
-        cloudflareServices: row.cloudflare_services ? JSON.parse(row.cloudflare_services as string) : undefined,
+        errorLogs: row.error_logs
+          ? JSON.parse(row.error_logs as string)
+          : undefined,
+        resolvedIssues: row.resolved_issues
+          ? JSON.parse(row.resolved_issues as string)
+          : undefined,
+        cloudflareServices: row.cloudflare_services
+          ? JSON.parse(row.cloudflare_services as string)
+          : undefined,
         projectName: row.project_name as string | undefined,
         lastUpdated: row.last_updated as string | undefined
       };
     } catch (error) {
-      console.error('Failed to get project context:', error);
+      console.error("Failed to get project context:", error);
       return {};
     }
   }
 
   /**
    * Add a resolved issue to the project context
-   * 
+   *
    * @param issue - Description of the issue
    * @param solution - The solution that was applied
    * @param errorCodes - Optional error codes related to the issue
@@ -421,7 +467,7 @@ export class DevCopilotAgent extends DurableObject<Env> {
 
   /**
    * Add error logs to the project context
-   * 
+   *
    * @param logs - Array of error log strings to add
    */
   async addErrorLogs(logs: string[]): Promise<StateOperationResult> {
@@ -432,11 +478,14 @@ export class DevCopilotAgent extends DurableObject<Env> {
 
   /**
    * Set the current Worker code being analyzed
-   * 
+   *
    * @param code - The Worker source code
    * @param projectName - Optional project name
    */
-  async setWorkerCode(code: string, projectName?: string): Promise<StateOperationResult> {
+  async setWorkerCode(
+    code: string,
+    projectName?: string
+  ): Promise<StateOperationResult> {
     return this.updateProjectContext({
       workerCode: code,
       projectName
@@ -462,25 +511,25 @@ export class DevCopilotAgent extends DurableObject<Env> {
     try {
       // Delete all messages
       this.sql.exec(`DELETE FROM messages`);
-      
+
       // Clear project context
       this.sql.exec(`DELETE FROM project_context`);
-      
+
       // Reset session info
       this.sql.exec(`DELETE FROM session_info`);
-      
+
       // Clear cache
       this.sessionCache = null;
-      
+
       // Create new session
       this.ensureSession();
 
       return { success: true };
     } catch (error) {
-      console.error('Failed to clear session:', error);
+      console.error("Failed to clear session:", error);
       return {
         success: false,
-        error: `Failed to clear session: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: `Failed to clear session: ${error instanceof Error ? error.message : "Unknown error"}`
       };
     }
   }
@@ -526,10 +575,14 @@ export class DevCopilotAgent extends DurableObject<Env> {
 
     try {
       // Route: POST /messages - Add a message
-      if (path === '/messages' && method === 'POST') {
-        const body = await request.json() as { role: string; content: string; metadata?: MessageMetadata };
+      if (path === "/messages" && method === "POST") {
+        const body = (await request.json()) as {
+          role: string;
+          content: string;
+          metadata?: MessageMetadata;
+        };
         const message = await this.addMessage(
-          body.role as 'user' | 'assistant' | 'system',
+          body.role as "user" | "assistant" | "system",
           body.content,
           body.metadata
         );
@@ -537,10 +590,14 @@ export class DevCopilotAgent extends DurableObject<Env> {
       }
 
       // Route: GET /messages - Get conversation history
-      if (path === '/messages' && method === 'GET') {
-        const limit = url.searchParams.get('limit');
-        const role = url.searchParams.get('role') as 'user' | 'assistant' | 'system' | null;
-        
+      if (path === "/messages" && method === "GET") {
+        const limit = url.searchParams.get("limit");
+        const role = url.searchParams.get("role") as
+          | "user"
+          | "assistant"
+          | "system"
+          | null;
+
         const messages = await this.getConversationHistory({
           limit: limit ? parseInt(limit, 10) : undefined,
           role: role ?? undefined
@@ -549,41 +606,41 @@ export class DevCopilotAgent extends DurableObject<Env> {
       }
 
       // Route: GET /context - Get project context
-      if (path === '/context' && method === 'GET') {
+      if (path === "/context" && method === "GET") {
         const context = await this.getProjectContext();
         return Response.json(context);
       }
 
       // Route: PUT /context - Update project context
-      if (path === '/context' && method === 'PUT') {
-        const body = await request.json() as Partial<ProjectContext>;
+      if (path === "/context" && method === "PUT") {
+        const body = (await request.json()) as Partial<ProjectContext>;
         const result = await this.updateProjectContext(body);
         return Response.json(result);
       }
 
       // Route: GET /session - Get session info
-      if (path === '/session' && method === 'GET') {
+      if (path === "/session" && method === "GET") {
         const session = await this.getSessionInfo();
         return Response.json(session);
       }
 
       // Route: DELETE /session - Clear session
-      if (path === '/session' && method === 'DELETE') {
+      if (path === "/session" && method === "DELETE") {
         const result = await this.clearSession();
         return Response.json(result);
       }
 
       // Route: GET /state - Get full state (for debugging)
-      if (path === '/state' && method === 'GET') {
+      if (path === "/state" && method === "GET") {
         const state = await this.getFullState();
         return Response.json(state);
       }
 
-      return new Response('Not Found', { status: 404 });
+      return new Response("Not Found", { status: 404 });
     } catch (error) {
-      console.error('Durable Object request error:', error);
+      console.error("Durable Object request error:", error);
       return Response.json(
-        { error: error instanceof Error ? error.message : 'Unknown error' },
+        { error: error instanceof Error ? error.message : "Unknown error" },
         { status: 500 }
       );
     }
