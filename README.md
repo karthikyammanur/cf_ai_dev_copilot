@@ -1,6 +1,26 @@
-# 🚀 DevCopilot - AI-Powered Cloudflare Workers Assistant
+# DevCopilot - AI-Powered Cloudflare Workers Assistant
 
 **Your intelligent companion for building, debugging, and optimizing Cloudflare Workers.**
+
+
+## 🔗 Quick Navigation
+
+- [Live Demo](#-live-demo)
+- [Key Features](#key-features)
+- [Architecture Overview](#architecture-overview)
+- [Features in Detail](#features-in-detail)
+  - [Error Analysis](#error-analysis)
+  - [Code Review](#code-review)
+  - [Documentation Search](#documentation-search)
+- [Setup Instructions](#setup-instructions)
+- [Usage Examples](#usage-examples)
+- [Technical Details](#technical-details)
+- [Development](#development)
+- [Future Improvements](#future-improvements)
+- [Built With](#built-with)
+- [License](#license)
+- [Author](#author)
+
 
 ## 🌐 Live Demo
 
