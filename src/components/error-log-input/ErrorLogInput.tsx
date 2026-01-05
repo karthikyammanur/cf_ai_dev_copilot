@@ -79,27 +79,30 @@ export function ErrorLogInput({
 
   return (
     <div
-      className={`rounded-lg border border-neutral-700 bg-neutral-850 overflow-hidden ${className}`}
+      className={`rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-850 overflow-hidden ${className}`}
     >
       {/* Header - Always visible */}
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-neutral-800/50 transition-colors text-left"
+        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 transition-colors text-left"
       >
-        <span className="text-neutral-400">
+        <span className="text-neutral-500 dark:text-neutral-400">
           {isExpanded ? (
             <CaretDownIcon size={14} />
           ) : (
             <CaretRightIcon size={14} />
           )}
         </span>
-        <WarningCircleIcon size={18} className="text-red-400" />
-        <span className="text-sm font-medium text-neutral-200 flex-1">
+        <WarningCircleIcon
+          size={18}
+          className="text-red-500 dark:text-red-400"
+        />
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200 flex-1">
           Paste Error Log
         </span>
         {errorLog && !isExpanded && (
-          <span className="text-xs bg-red-900/50 text-red-300 px-2 py-0.5 rounded">
+          <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-300 px-2 py-0.5 rounded">
             Has content
           </span>
         )}
@@ -140,7 +143,7 @@ export function ErrorLogInput({
             value={errorLog}
             onChange={(e) => setErrorLog(e.target.value)}
             placeholder={placeholder}
-            className="w-full h-40 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-sm font-mono text-red-300 placeholder:text-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-[#F6821F] focus:border-[#F6821F]"
+            className="w-full h-40 px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-lg text-sm font-mono text-red-600 dark:text-red-300 placeholder:text-neutral-400 dark:placeholder:text-neutral-600 resize-none focus:outline-none focus:ring-1 focus:ring-[#F6821F] focus:border-[#F6821F]"
             spellCheck={false}
           />
 

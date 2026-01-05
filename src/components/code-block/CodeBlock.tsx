@@ -276,17 +276,17 @@ export function CodeBlock({
 
   return (
     <div
-      className={`relative group rounded-lg overflow-hidden border border-neutral-700 bg-neutral-900 ${className}`}
+      className={`relative group rounded-lg overflow-hidden border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 ${className}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-neutral-800 border-b border-neutral-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-neutral-200 dark:bg-neutral-800 border-b border-neutral-300 dark:border-neutral-700">
         <div className="flex items-center gap-2">
           {/* Language badge */}
-          <span className="text-xs font-mono text-neutral-400 bg-neutral-700 px-2 py-0.5 rounded">
+          <span className="text-xs font-mono text-neutral-600 dark:text-neutral-400 bg-neutral-300 dark:bg-neutral-700 px-2 py-0.5 rounded">
             {detectedLanguage}
           </span>
           {title && (
-            <span className="text-sm text-neutral-300 font-medium">
+            <span className="text-sm text-neutral-700 dark:text-neutral-300 font-medium">
               {title}
             </span>
           )}
@@ -296,7 +296,7 @@ export function CodeBlock({
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-1 text-xs text-neutral-400 hover:text-white bg-neutral-700 hover:bg-neutral-600 rounded transition-colors"
+          className="flex items-center gap-1.5 px-2 py-1 text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-neutral-300 dark:bg-neutral-700 hover:bg-neutral-400 dark:hover:bg-neutral-600 rounded transition-colors"
           aria-label={copied ? "Copied!" : "Copy code"}
         >
           {copied ? (
@@ -322,11 +322,14 @@ export function CodeBlock({
           <table className="w-full border-collapse">
             <tbody>
               {lines.map((line, index) => (
-                <tr key={index} className="hover:bg-neutral-800/50">
-                  <td className="text-neutral-500 text-right pr-4 select-none w-10 align-top">
+                <tr
+                  key={index}
+                  className="hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50"
+                >
+                  <td className="text-neutral-400 dark:text-neutral-500 text-right pr-4 select-none w-10 align-top">
                     {index + 1}
                   </td>
-                  <td className="text-neutral-100">
+                  <td className="text-neutral-800 dark:text-neutral-100">
                     <span
                       // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized content
                       dangerouslySetInnerHTML={{ __html: line || "&nbsp;" }}
@@ -337,7 +340,7 @@ export function CodeBlock({
             </tbody>
           </table>
         ) : (
-          <pre className="text-neutral-100 whitespace-pre-wrap break-words">
+          <pre className="text-neutral-800 dark:text-neutral-100 whitespace-pre-wrap break-words">
             <code
               // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized content
               dangerouslySetInnerHTML={{ __html: highlightedCode }}
@@ -361,7 +364,7 @@ export interface InlineCodeProps {
 export function InlineCode({ children, className = "" }: InlineCodeProps) {
   return (
     <code
-      className={`px-1.5 py-0.5 rounded bg-neutral-800 text-[#F6821F] font-mono text-sm ${className}`}
+      className={`px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-[#F6821F] font-mono text-sm ${className}`}
     >
       {children}
     </code>

@@ -1,238 +1,392 @@
-# 🤖 Chat Agent Starter Kit
+# 🚀 DevCopilot - AI-Powered Cloudflare Workers Assistant
 
-![npm i agents command](./npm-agents-banner.svg)
+**Your intelligent companion for building, debugging, and optimizing Cloudflare Workers.**
 
-<a href="https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/agents-starter"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
+## 🌐 Live Demo
 
-A starter template for building AI-powered chat agents using Cloudflare's Agent platform, powered by [`agents`](https://www.npmjs.com/package/agents). This project provides a foundation for creating interactive chat experiences with AI, complete with a modern UI and tool integration capabilities.
+**Try it now:** https://cf-ai-dev-copilot.karthikyam2006.workers.dev
 
-## Features
+### Quick Test
 
-- 💬 Interactive chat interface with AI
-- 🛠️ Built-in tool system with human-in-the-loop confirmation
-- 📅 Advanced task scheduling (one-time, delayed, and recurring via cron)
-- 🌓 Dark/Light theme support
-- ⚡️ Real-time streaming responses
-- 🔄 State management and chat history
-- 🎨 Modern, responsive UI
+1. Click "Try Example" → CPU Limit Error
+2. Watch the AI analyze and provide solutions
+3. Ask: "How do I optimize my Worker?"
 
-## Prerequisites
+---
 
-- Cloudflare account
-- OpenAI API key
+DevCopilot is an AI-powered development assistant built entirely on Cloudflare's edge infrastructure. It helps developers debug errors, review code, and navigate Cloudflare's extensive documentation—all through a natural conversation interface powered by Llama 3.3 70B.
 
-## Quick Start
+## Key Features
 
-1. Create a new project:
+- **Smart Error Analysis** - Paste error logs and get instant explanations with actionable fixes
+- **Code Review** - Get best practices, security checks, and performance recommendations
+- **Documentation Search** - Natural language queries for Workers, KV, D1, R2, Durable Objects, and more
+- **Stateful Memory** - Conversation context persists across sessions using Durable Objects
+- **Modern UI** - Clean, responsive chat interface with dark/light mode and syntax highlighting
+- **Edge-Native** - Runs entirely on Cloudflare's global network with sub-100ms latency
 
-```bash
-npx create-cloudflare@latest --template cloudflare/agents-starter
-```
+---
 
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Set up your environment:
-
-Create a `.dev.vars` file:
-
-```env
-OPENAI_API_KEY=your_openai_api_key
-```
-
-4. Run locally:
-
-```bash
-npm start
-```
-
-5. Deploy:
-
-```bash
-npm run deploy
-```
-
-## Project Structure
+## Architecture Overview
 
 ```
-├── src/
-│   ├── app.tsx        # Chat UI implementation
-│   ├── server.ts      # Chat agent logic
-│   ├── tools.ts       # Tool definitions
-│   ├── utils.ts       # Helper functions
-│   └── styles.css     # UI styling
+┌─────────────────────────────────────────────────────────────────────┐
+│                         User Browser                                │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │              React Chat UI (Vite + Tailwind)                │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼ HTTPS
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Cloudflare Workers Edge                          │
+│  ┌────────────────┐    ┌─────────────────┐    ┌─────────────────┐  │
+│  │  Main Worker   │───▶│  Durable Object │    │    Workers AI   │  │
+│  │  (server.ts)   │    │ (DevCopilotAgent)│    │  (Llama 3.3)   │  │
+│  └────────────────┘    └─────────────────┘    └─────────────────┘  │
+│          │                     │                       │            │
+│          ▼                     ▼                       │            │
+│  ┌────────────────┐    ┌─────────────────┐            │            │
+│  │  Tool System   │    │  SQLite Storage │◀───────────┘            │
+│  │ (analyze/review│    │ (conversation   │                         │
+│  │  /search)      │    │  history)       │                         │
+│  └────────────────┘    └─────────────────┘                         │
+│          │                                                          │
+│          ▼                                                          │
+│  ┌────────────────┐                                                │
+│  │  KV Namespace  │                                                │
+│  │  (caching)     │                                                │
+│  └────────────────┘                                                │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Customization Guide
+### Components
 
-### Adding New Tools
+| Component            | Technology                     | Purpose                                       |
+| -------------------- | ------------------------------ | --------------------------------------------- |
+| **Frontend**         | React 19, Vite, Tailwind CSS 4 | Chat interface with syntax highlighting       |
+| **API Layer**        | Cloudflare Workers             | Request routing and orchestration             |
+| **AI Engine**        | Workers AI (Llama 3.3 70B FP8) | Natural language understanding and generation |
+| **State Management** | Durable Objects + SQLite       | Persistent conversation history per session   |
+| **Caching**          | KV Namespace                   | Documentation and response caching            |
+| **Tools**            | Zod-validated functions        | Error analysis, code review, doc search       |
 
-Add new tools in `tools.ts` using the tool builder:
+---
 
-```ts
-// Example of a tool that requires confirmation
-const searchDatabase = tool({
-  description: "Search the database for user records",
-  parameters: z.object({
-    query: z.string(),
-    limit: z.number().optional()
-  })
-  // No execute function = requires confirmation
-});
+## Features in Detail
 
-// Example of an auto-executing tool
-const getCurrentTime = tool({
-  description: "Get current server time",
-  parameters: z.object({}),
-  execute: async () => new Date().toISOString()
-});
+### Error Analysis
 
-// Scheduling tool implementation
-const scheduleTask = tool({
-  description:
-    "schedule a task to be executed at a later time. 'when' can be a date, a delay in seconds, or a cron pattern.",
-  parameters: z.object({
-    type: z.enum(["scheduled", "delayed", "cron"]),
-    when: z.union([z.number(), z.string()]),
-    payload: z.string()
-  }),
-  execute: async ({ type, when, payload }) => {
-    // ... see the implementation in tools.ts
+Paste any Cloudflare Worker error and get instant diagnosis:
+
+```
+User: "Error: Worker exceeded CPU time limit at handleRequest (worker.js:42)"
+
+DevCopilot: This is a CPU_TIME_EXCEEDED error. Your Worker is taking too long
+to execute. Here's how to fix it:
+
+1. Move heavy computation to a background queue (Queues)
+2. Use streaming responses instead of buffering
+3. Cache expensive operations with KV
+4. Consider breaking into multiple Workers with Service Bindings
+```
+
+**Supported Error Types:** CPU limits, memory issues, KV errors, D1 query failures, R2 operations, Durable Object limits, and 12+ more patterns.
+
+### Code Review
+
+Submit your Worker code for comprehensive analysis:
+
+```javascript
+// Your code
+export default {
+  async fetch(request, env) {
+    const data = await env.DB.prepare("SELECT * FROM users").all();
+    return new Response(JSON.stringify(data));
   }
-});
+};
+
+// DevCopilot identifies:
+// Missing error handling for database query
+// No Content-Type header set
+// Consider pagination for large result sets
+// Suggestion: Add try/catch and proper headers
 ```
 
-To handle tool confirmations, add execution functions to the `executions` object:
+### Documentation Search
+
+Ask questions in natural language:
+
+- "How do Durable Objects differ from KV?"
+- "What's the best way to handle file uploads with R2?"
+- "Explain WebSocket hibernation in Workers"
+
+DevCopilot searches across 30+ documentation topics and returns relevant, contextualized answers.
+
+---
+
+## Setup Instructions
+
+### Prerequisites
+
+- **Node.js** 22.12+ (recommended) or 20.x
+- **Cloudflare Account** with Workers paid plan (for AI access)
+- **Wrangler CLI** 4.x+ (`npm install -g wrangler`)
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/karthikyammanur/cf_ai_dev_copilot.git
+   cd cf_ai_dev_copilot
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Authenticate with Cloudflare**
+
+   ```bash
+   wrangler login
+   ```
+
+4. **Create KV Namespace** (if not already created)
+
+   ```bash
+   wrangler kv namespace create "CACHE"
+   # Copy the ID and update wrangler.toml
+   ```
+
+5. **Configure environment** (optional for local dev)
+
+   ```bash
+   cp .dev.vars.example .dev.vars
+   # Edit .dev.vars if needed
+   ```
+
+6. **Run locally**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:5173](http://localhost:5173)
+
+7. **Deploy to Cloudflare**
+   ```bash
+   npm run deploy
+   ```
+
+### Environment Variables
+
+| Variable        | Required   | Description                                      |
+| --------------- | ---------- | ------------------------------------------------ |
+| `AI`            | Auto-bound | Workers AI binding (configured in wrangler.toml) |
+| `CACHE`         | Auto-bound | KV namespace for caching                         |
+| `COPILOT_AGENT` | Auto-bound | Durable Object binding                           |
+
+---
+
+## Usage Examples
+
+### Debugging an Error
+
+```
+You: I'm getting this error in my Worker:
+"TypeError: Cannot read properties of undefined (reading 'get')"
+at line 15 in my KV access code
+
+DevCopilot: This error occurs when your KV namespace binding is undefined.
+Common causes:
+1. KV namespace not bound in wrangler.toml
+2. Typo in the binding name
+3. Missing await on KV.get()
+
+Here's the fix:
+```
+
+```javascript
+// Ensure binding exists in wrangler.toml
+[[kv_namespaces]];
+binding = "MY_KV";
+id = "your-namespace-id";
+
+// In your code, always check the binding
+if (!env.MY_KV) {
+  return new Response("KV not configured", { status: 500 });
+}
+const value = await env.MY_KV.get("key");
+```
+
+### Reviewing Worker Code
+
+```
+You: Review this code for security issues:
+
+export default {
+  fetch(request, env) {
+    const url = new URL(request.url);
+    const file = url.searchParams.get("file");
+    return env.BUCKET.get(file);
+  }
+}
+
+DevCopilot: Critical: Path traversal vulnerability detected!
+An attacker could access any file: ?file=../../../etc/passwd
+
+Fix with path validation:
+```
+
+```javascript
+const safePath = file.replace(/\.\./g, "").replace(/^\//, "");
+if (!safePath || safePath.includes("/")) {
+  return new Response("Invalid path", { status: 400 });
+}
+```
+
+---
+
+## Technical Details
+
+### Llama 3.3 70B Integration
+
+DevCopilot uses `@cf/meta/llama-3.3-70b-instruct-fp8-fast` via Workers AI:
 
 ```typescript
-export const executions = {
-  searchDatabase: async ({
-    query,
-    limit
-  }: {
-    query: string;
-    limit?: number;
-  }) => {
-    // Implementation for when the tool is confirmed
-    const results = await db.search(query, limit);
-    return results;
+const response = await env.AI.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+  messages: conversationHistory,
+  max_tokens: 2048,
+  temperature: 0.7
+});
+```
+
+The model runs on Cloudflare's GPU infrastructure with:
+
+- **FP8 quantization** for fast inference
+- **~50-200ms latency** from edge
+- **No cold starts** - always warm
+
+### Durable Objects State Management
+
+Each user session gets a dedicated Durable Object instance with SQLite storage:
+
+```typescript
+class DevCopilotAgent extends DurableObject {
+  sql: SqlStorage;
+
+  constructor(state: DurableObjectState, env: Env) {
+    super(state, env);
+    this.sql = state.storage.sql;
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS messages (...)`);
   }
-  // Add more execution handlers for other tools that require confirmation
-};
+}
 ```
 
-Tools can be configured in two ways:
+### Tool Calling Architecture
 
-1. With an `execute` function for automatic execution
-2. Without an `execute` function, requiring confirmation and using the `executions` object to handle the confirmed action. NOTE: The keys in `executions` should match `toolsRequiringConfirmation` in `app.tsx`.
+Tools are defined with Zod schemas for type-safe validation:
 
-### Use a different AI model provider
-
-The starting [`server.ts`](https://github.com/cloudflare/agents-starter/blob/main/src/server.ts) implementation uses the [`ai-sdk`](https://sdk.vercel.ai/docs/introduction) and the [OpenAI provider](https://sdk.vercel.ai/providers/ai-sdk-providers/openai), but you can use any AI model provider by:
-
-1. Installing an alternative AI provider for the `ai-sdk`, such as the [`workers-ai-provider`](https://sdk.vercel.ai/providers/community-providers/cloudflare-workers-ai) or [`anthropic`](https://sdk.vercel.ai/providers/ai-sdk-providers/anthropic) provider:
-2. Replacing the AI SDK with the [OpenAI SDK](https://github.com/openai/openai-node)
-3. Using the Cloudflare [Workers AI + AI Gateway](https://developers.cloudflare.com/ai-gateway/providers/workersai/#workers-binding) binding API directly
-
-For example, to use the [`workers-ai-provider`](https://sdk.vercel.ai/providers/community-providers/cloudflare-workers-ai), install the package:
-
-```sh
-npm install workers-ai-provider
-```
-
-Add an `ai` binding to `wrangler.jsonc`:
-
-```jsonc
-// rest of file
-  "ai": {
-    "binding": "AI"
+```typescript
+const analyzeError = tool({
+  description: "Analyze Cloudflare Worker error logs",
+  parameters: z.object({
+    errorMessage: z.string(),
+    errorType: z.string().optional(),
+    stackTrace: z.string().optional()
+  }),
+  execute: async ({ errorMessage }) => {
+    // Pattern matching against 12+ error types
+    return { diagnosis, suggestions, codeExample };
   }
-// rest of file
+});
 ```
 
-Replace the `@ai-sdk/openai` import and usage with the `workers-ai-provider`:
+---
 
-```diff
-// server.ts
-// Change the imports
-- import { openai } from "@ai-sdk/openai";
-+ import { createWorkersAI } from 'workers-ai-provider';
+## Development
 
-// Create a Workers AI instance
-+ const workersai = createWorkersAI({ binding: env.AI });
+### Local Development
 
-// Use it when calling the streamText method (or other methods)
-// from the ai-sdk
-- const model = openai("gpt-4o-2024-11-20");
-+ const model = workersai("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b")
+```bash
+# Start dev server with hot reload
+npm run dev
+
+# Run type checking
+npm run check
+
+# Run tests
+npm run test
+
+# Format code
+npm run format
 ```
 
-Commit your changes and then run the `agents-starter` as per the rest of this README.
+### Project Structure
 
-### Modifying the UI
+```
+src/
+├── server.ts              # Main Worker entry point
+├── client.tsx             # React app entry
+├── app-devcopilot.tsx     # Chat UI component
+├── durable-objects/
+│   └── DevCopilotAgent.ts # Stateful agent with SQLite
+├── tools/
+│   ├── analyzeCloudflareError.ts
+│   ├── reviewWorkerCode.ts
+│   └── searchCloudflareDocs.ts
+└── components/
+    ├── code-block/        # Syntax highlighting
+    ├── project-context/   # Sidebar state display
+    └── error-log-input/   # Error paste UI
+```
 
-The chat interface is built with React and can be customized in `app.tsx`:
+### Contributing
 
-- Modify the theme colors in `styles.css`
-- Add new UI components in the chat container
-- Customize message rendering and tool confirmation dialogs
-- Add new controls to the header
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
-### Example Use Cases
+---
 
-1. **Customer Support Agent**
-   - Add tools for:
-     - Ticket creation/lookup
-     - Order status checking
-     - Product recommendations
-     - FAQ database search
+## Future Improvements
 
-2. **Development Assistant**
-   - Integrate tools for:
-     - Code linting
-     - Git operations
-     - Documentation search
-     - Dependency checking
+- [ ] **Multi-file project context** - Analyze entire Worker projects
+- [ ] **Wrangler CLI integration** - Direct deployment commands from chat
+- [ ] **GitHub integration** - Link repos and auto-review PRs
+- [ ] **Custom knowledge base** - Upload your own documentation
+- [ ] **Team workspaces** - Shared conversation history
+- [ ] **Voice input** - Speak your questions
+- [ ] **VS Code extension** - Inline assistance in your editor
 
-3. **Data Analysis Assistant**
-   - Build tools for:
-     - Database querying
-     - Data visualization
-     - Statistical analysis
-     - Report generation
+---
 
-4. **Personal Productivity Assistant**
-   - Implement tools for:
-     - Task scheduling with flexible timing options
-     - One-time, delayed, and recurring task management
-     - Task tracking with reminders
-     - Email drafting
-     - Note taking
+## Built With
 
-5. **Scheduling Assistant**
-   - Build tools for:
-     - One-time event scheduling using specific dates
-     - Delayed task execution (e.g., "remind me in 30 minutes")
-     - Recurring tasks using cron patterns
-     - Task payload management
-     - Flexible scheduling patterns
+This project uses Cloudflare's [Agents Starter Kit](https://github.com/cloudflare/agents-starter) as the foundation and extends it with custom AI tools and UI components designed specifically for Cloudflare Workers development assistance.
 
-Each use case can be implemented by:
+All code was developed with AI assistance using **Claude Opus 4.5** via GitHub Copilot. See [PROMPTS.md](PROMPTS.md) for the complete development process and prompts used.
 
-1. Adding relevant tools in `tools.ts`
-2. Customizing the UI for specific interactions
-3. Extending the agent's capabilities in `server.ts`
-4. Adding any necessary external API integrations
-
-## Learn More
-
-- [`agents`](https://github.com/cloudflare/agents/blob/main/packages/agents/README.md)
-- [Cloudflare Agents Documentation](https://developers.cloudflare.com/agents/)
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
+---
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+Built with Cloudflare Workers
+
+---
+
+<p align="center">
+  <strong>Powered by</strong><br>
+  <a href="https://workers.cloudflare.com/">Cloudflare Workers</a> • 
+  <a href="https://developers.cloudflare.com/workers-ai/">Workers AI</a> • 
+  <a href="https://developers.cloudflare.com/durable-objects/">Durable Objects</a>
+</p>

@@ -17,6 +17,7 @@ compatibility_flags = ["nodejs_compat"]
 # =============================================================================
 [ai]
 binding = "AI"
+remote = true  # Always uses remote AI resources
 
 # =============================================================================
 # Durable Objects Configuration
@@ -39,7 +40,7 @@ new_sqlite_classes = ["DevCopilotAgent"]
 # =============================================================================
 [[kv_namespaces]]
 binding = "CACHE"
-id = "YOUR_KV_NAMESPACE_ID"  # Replace after running: wrangler kv namespace create "CACHE"
+id = "85742f3dd9ab4f4ea9d1411d7ced6b70"
 # preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"  # For local dev, optional
 
 # =============================================================================
@@ -91,7 +92,15 @@ name = "cf-ai-dev-copilot"
 # head_sampling_rate = 1  # Sample 100% of requests for debugging
 
 # =============================================================================
-# Limits Configuration
+# Limits Configuration (Requires paid plan)
 # =============================================================================
-[limits]
-cpu_ms = 30000  # 30 second CPU time limit for AI operations
+# [limits]
+# cpu_ms = 30000  # 30 second CPU time limit for AI operations
+
+# =============================================================================
+# Development Configuration
+# =============================================================================
+[dev]
+ip = "localhost"
+port = 8787
+local_protocol = "http"

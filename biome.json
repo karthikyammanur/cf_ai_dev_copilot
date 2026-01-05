@@ -25,6 +25,12 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "a11y": {
+        "useButtonType": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "warn"
+      },
       "style": {
         "noNonNullAssertion": "off"
       },

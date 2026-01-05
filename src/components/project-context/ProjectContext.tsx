@@ -104,21 +104,21 @@ function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-neutral-700 last:border-b-0">
+    <div className="border-b border-neutral-200 dark:border-neutral-700 last:border-b-0">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-neutral-800/50 transition-colors text-left"
+        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 transition-colors text-left"
       >
-        <span className="text-neutral-400">
+        <span className="text-neutral-500 dark:text-neutral-400">
           {isOpen ? <CaretDownIcon size={14} /> : <CaretRightIcon size={14} />}
         </span>
-        <span className="text-neutral-400">{icon}</span>
-        <span className="text-sm font-medium text-neutral-200 flex-1">
+        <span className="text-neutral-500 dark:text-neutral-400">{icon}</span>
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200 flex-1">
           {title}
         </span>
         {badge !== undefined && (
-          <span className="text-xs bg-neutral-700 text-neutral-300 px-2 py-0.5 rounded-full">
+          <span className="text-xs bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 px-2 py-0.5 rounded-full">
             {badge}
           </span>
         )}
@@ -179,21 +179,24 @@ export function ProjectContext({
       <button
         type="button"
         onClick={onToggle}
-        className="fixed top-4 right-4 z-50 p-2 bg-neutral-800 border border-neutral-700 rounded-lg hover:bg-neutral-700 transition-colors md:hidden"
+        className="fixed top-4 right-4 z-50 p-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors md:hidden"
         aria-label="Open project context"
       >
-        <SidebarIcon size={20} className="text-neutral-300" />
+        <SidebarIcon
+          size={20}
+          className="text-neutral-600 dark:text-neutral-300"
+        />
       </button>
     );
   }
 
   return (
-    <aside className="w-80 h-full bg-neutral-900 border-l border-neutral-700 flex flex-col overflow-hidden">
+    <aside className="w-80 h-full bg-neutral-50 dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-700 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-700 bg-neutral-850">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-850">
         <div className="flex items-center gap-2">
           <CloudIcon size={18} className="text-[#F6821F]" />
-          <h2 className="text-sm font-semibold text-neutral-100">
+          <h2 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
             {data.projectName || "Project Context"}
           </h2>
         </div>
@@ -202,35 +205,41 @@ export function ProjectContext({
             type="button"
             onClick={fetchContext}
             disabled={loading}
-            className="p-1.5 hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
+            className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
             aria-label="Refresh context"
           >
             <ArrowClockwiseIcon
               size={16}
-              className={`text-neutral-400 ${loading ? "animate-spin" : ""}`}
+              className={`text-neutral-500 dark:text-neutral-400 ${loading ? "animate-spin" : ""}`}
             />
           </button>
           <button
             type="button"
             onClick={onToggle}
-            className="p-1.5 hover:bg-neutral-700 rounded transition-colors"
+            className="p-1.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
             aria-label="Close sidebar"
           >
-            <XIcon size={16} className="text-neutral-400" />
+            <XIcon
+              size={16}
+              className="text-neutral-500 dark:text-neutral-400"
+            />
           </button>
         </div>
       </div>
 
       {/* Error State */}
       {error && (
-        <div className="mx-4 mt-3 p-3 bg-red-900/30 border border-red-700 rounded-lg flex items-start gap-2">
-          <WarningIcon size={16} className="text-red-400 mt-0.5 shrink-0" />
+        <div className="mx-4 mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg flex items-start gap-2">
+          <WarningIcon
+            size={16}
+            className="text-red-500 dark:text-red-400 mt-0.5 shrink-0"
+          />
           <div>
-            <p className="text-sm text-red-400">{error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             <button
               type="button"
               onClick={fetchContext}
-              className="text-xs text-red-300 hover:text-red-200 underline mt-1"
+              className="text-xs text-red-500 dark:text-red-300 hover:text-red-700 dark:hover:text-red-200 underline mt-1"
             >
               Try again
             </button>
@@ -254,7 +263,7 @@ export function ProjectContext({
               showLineNumbers
             />
           ) : (
-            <p className="text-sm text-neutral-500 italic">
+            <p className="text-sm text-neutral-400 dark:text-neutral-500 italic">
               No worker code loaded. Paste your code in the chat to get started.
             </p>
           )}
@@ -271,7 +280,7 @@ export function ProjectContext({
               {data.errorLogs.slice(-5).map((log, index) => (
                 <div
                   key={index}
-                  className="p-2 bg-red-900/20 border border-red-800/50 rounded text-xs font-mono text-red-300 break-all"
+                  className="p-2 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800/50 rounded text-xs font-mono text-red-600 dark:text-red-300 break-all"
                 >
                   {log.slice(0, 200)}
                   {log.length > 200 && "..."}
@@ -293,21 +302,21 @@ export function ProjectContext({
               {data.resolvedIssues.map((issue) => (
                 <div
                   key={issue.id}
-                  className="p-3 bg-neutral-800/50 rounded-lg border border-neutral-700"
+                  className="p-3 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-700"
                 >
                   <div className="flex items-start gap-2">
                     <CheckCircleIcon
                       size={16}
-                      className="text-green-400 mt-0.5 shrink-0"
+                      className="text-green-500 dark:text-green-400 mt-0.5 shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-neutral-200 font-medium truncate">
+                      <p className="text-sm text-neutral-700 dark:text-neutral-200 font-medium truncate">
                         {issue.issue}
                       </p>
-                      <p className="text-xs text-neutral-400 mt-1">
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                         {issue.resolution}
                       </p>
-                      <p className="text-xs text-neutral-500 mt-2">
+                      <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2">
                         {new Date(issue.timestamp).toLocaleDateString()}
                       </p>
                     </div>
@@ -316,7 +325,7 @@ export function ProjectContext({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-neutral-500 italic">
+            <p className="text-sm text-neutral-400 dark:text-neutral-500 italic">
               Issues you resolve will appear here.
             </p>
           )}
@@ -334,7 +343,7 @@ export function ProjectContext({
               {data.cloudflareServices.map((service) => (
                 <span
                   key={service}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-800 border border-neutral-700"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700"
                   style={{
                     color: SERVICE_COLORS[service] || "#F6821F",
                     borderColor: `${SERVICE_COLORS[service] || "#F6821F"}40`
@@ -352,7 +361,7 @@ export function ProjectContext({
             </div>
           ) : (
             <div className="space-y-2">
-              <p className="text-sm text-neutral-500 italic mb-3">
+              <p className="text-sm text-neutral-400 dark:text-neutral-500 italic mb-3">
                 Detected services will appear here.
               </p>
               {/* Default services hint */}
@@ -360,9 +369,9 @@ export function ProjectContext({
                 {["Workers AI", "KV", "D1"].map((service) => (
                   <span
                     key={service}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-800/50 border border-neutral-700/50 text-neutral-500"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700/50 text-neutral-400 dark:text-neutral-500"
                   >
-                    <span className="w-2 h-2 rounded-full bg-neutral-600" />
+                    <span className="w-2 h-2 rounded-full bg-neutral-400 dark:bg-neutral-600" />
                     {service}
                   </span>
                 ))}
@@ -380,19 +389,19 @@ export function ProjectContext({
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-neutral-500">Messages</span>
-                <span className="text-neutral-200">
+                <span className="text-neutral-700 dark:text-neutral-200">
                   {data.sessionInfo.messageCount}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Started</span>
-                <span className="text-neutral-200">
+                <span className="text-neutral-700 dark:text-neutral-200">
                   {new Date(data.sessionInfo.createdAt).toLocaleTimeString()}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Last Activity</span>
-                <span className="text-neutral-200">
+                <span className="text-neutral-700 dark:text-neutral-200">
                   {new Date(
                     data.sessionInfo.lastActivityAt
                   ).toLocaleTimeString()}
@@ -403,7 +412,7 @@ export function ProjectContext({
                 <span
                   className={
                     data.sessionInfo.isActive
-                      ? "text-green-400"
+                      ? "text-green-500 dark:text-green-400"
                       : "text-neutral-400"
                   }
                 >
@@ -416,8 +425,8 @@ export function ProjectContext({
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 border-t border-neutral-700 bg-neutral-850">
-        <p className="text-xs text-neutral-500 text-center">
+      <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-850">
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 text-center">
           Powered by{" "}
           <span className="text-[#F6821F] font-medium">
             Cloudflare Workers AI

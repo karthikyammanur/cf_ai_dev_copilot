@@ -450,6 +450,77 @@ function handleHealthCheck(env: Env): Response {
 }
 
 // =============================================================================
+// Simple Chat API (Direct Workers AI access)
+// =============================================================================
+
+/**
+ * Simple chat endpoint that directly calls Workers AI
+ * This is a simplified version for testing without the full agents framework
+ */
+async function handleSimpleChatAPI(
+  request: Request,
+  env: Env
+): Promise<Response> {
+  try {
+    const body = (await request.json()) as {
+      messages?: Array<{ role: string; content: string }>;
+      message?: string;
+    };
+
+    // Support both formats: single message or message array
+    let messages = body.messages || [];
+    if (body.message) {
+      messages = [...messages, { role: "user", content: body.message }];
+    }
+
+    if (messages.length === 0) {
+      return Response.json({ error: "No messages provided" }, { status: 400 });
+    }
+
+    // Prepare messages for Workers AI
+    const aiMessages = [
+      { role: "system", content: DEVCOPILOT_SYSTEM_PROMPT },
+      ...messages.map((m) => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content
+      }))
+    ];
+
+    // Call Workers AI directly
+    const modelId = env.AI_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
+    const result = await env.AI.run(
+      modelId as Parameters<typeof env.AI.run>[0],
+      {
+        messages: aiMessages,
+        max_tokens: parseInt(env.MAX_TOKENS || "4096", 10)
+      }
+    );
+
+    // Handle response
+    const response =
+      typeof result === "object" && result !== null && "response" in result
+        ? (result as { response: string }).response
+        : JSON.stringify(result);
+
+    return Response.json({
+      response,
+      model: modelId,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("[DevCopilot] Chat API error:", error);
+    return Response.json(
+      {
+        error: "Chat failed",
+        message: error instanceof Error ? error.message : "Unknown error"
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// =============================================================================
 // Worker Entry Point
 // =============================================================================
 
@@ -474,6 +545,11 @@ export default {
       });
     }
 
+    // Simple chat API endpoint (for testing without agents framework)
+    if (url.pathname === "/api/chat" && request.method === "POST") {
+      return handleSimpleChatAPI(request, env);
+    }
+
     // Direct tool API access
     const toolResponse = await handleToolAPI(request, env);
     if (toolResponse) return toolResponse;
@@ -492,6 +568,7 @@ export default {
         error: "Not found",
         availableEndpoints: [
           "/health",
+          "/api/chat",
           "/api/tools/analyze-error",
           "/api/tools/review-code",
           "/api/tools/search-docs",

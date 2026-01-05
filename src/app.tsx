@@ -370,9 +370,9 @@ export default function DevCopilotApp() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
-  // Agent setup
+  // Agent setup - use custom configuration for DevCopilot
   const agent = useAgent({
-    agent: "chat"
+    agent: "chat" // Use the default agent name from the agents framework
   });
 
   const [agentInput, setAgentInput] = useState("");
