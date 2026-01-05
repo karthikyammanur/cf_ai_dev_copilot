@@ -2,7 +2,6 @@
 
 **Your intelligent companion for building, debugging, and optimizing Cloudflare Workers.**
 
-
 ## 🔗 Quick Navigation
 
 - [Live Demo](#-live-demo)
@@ -20,7 +19,6 @@
 - [Built With](#built-with)
 - [License](#license)
 - [Author](#author)
-
 
 ## 🌐 Live Demo
 
