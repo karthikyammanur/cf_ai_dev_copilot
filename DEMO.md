@@ -21,6 +21,10 @@
 
 ## 🚀 Quick Start
 
+> **🌐 Try the live demo:** https://cf-ai-dev-copilot.karthikyam2006.workers.dev
+> 
+> Or run locally:
+
 ### Starting the Demo
 
 ```bash
